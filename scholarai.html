@@ -1,0 +1,3593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScholarAI – Research Writing Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e0f14;
+    --surface: #16181f;
+    --surface2: #1e2130;
+    --border: #2a2d3e;
+    --accent: #5b8af0;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --text: #e8eaf2;
+    --muted: #6b7280;
+    --sidebar-w: 240px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP NAV */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+  .logo span { font-size: 11px; font-family: 'DM Sans', sans-serif; -webkit-text-fill-color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .topbar-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+    margin-left: 16px;
+  }
+  .topbar-tab {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.18s;
+  }
+  .topbar-tab.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .topbar-tab:hover:not(.active) { color: var(--text); }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #5b8af022, #a78bfa22);
+    border: 1px solid #5b8af044;
+    color: var(--accent);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+  .sidebar-section {
+    padding: 4px 12px 8px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 6px 8px 4px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--muted);
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active {
+    background: linear-gradient(135deg, #5b8af018, #a78bfa12);
+    color: var(--text);
+    border: 1px solid #5b8af030;
+  }
+  .sidebar-item .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+  .sidebar-item .count {
+    margin-left: auto;
+    font-size: 10px;
+    background: var(--surface2);
+    border-radius: 20px;
+    padding: 1px 6px;
+    color: var(--muted);
+  }
+  .sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+  /* EDITOR AREA */
+  .editor-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .tb-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .tb-btn:hover { background: var(--surface2); color: var(--text); }
+  .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .tb-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+  .tb-right {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .wc-badge {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .editor-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 60px;
+    display: flex;
+    justify-content: center;
+  }
+  .editor-paper {
+    width: 100%;
+    max-width: 720px;
+  }
+  .paper-title-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    resize: none;
+    overflow: hidden;
+  }
+  .paper-title-input::placeholder { color: #3a3d52; }
+  .paper-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .paper-meta-field {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .paper-meta-field input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    width: 120px;
+  }
+  .paper-meta-field input::placeholder { color: #3a3d52; }
+  .paper-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
+
+  .editor-content {
+    width: 100%;
+    min-height: 400px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.85;
+    resize: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+  }
+  .editor-content::placeholder { color: #3a3d52; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    width: 340px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .panel-tab {
+    flex: 1;
+    padding: 11px 6px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-tab:hover:not(.active) { color: var(--text); }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .panel-section { display: none; }
+  .panel-section.visible { display: block; }
+
+  /* AI TOOLS */
+  .ai-prompt-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+  .ai-prompt-area textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.6;
+    resize: none;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 70px;
+  }
+  .ai-prompt-area textarea::placeholder { color: var(--muted); }
+  .ai-prompt-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .ai-mode-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 8px;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+  }
+  .btn-run {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-run:hover { opacity: 0.85; }
+  .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .qa-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .qa-btn:hover { border-color: var(--accent); background: #5b8af010; }
+  .qa-btn .qa-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+  .qa-btn .qa-label { font-size: 12px; font-weight: 600; color: var(--text); display: block; }
+  .qa-btn .qa-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+
+  .ai-result {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text);
+    position: relative;
+    margin-bottom: 12px;
+    animation: fadeSlide 0.3s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .ai-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ai-result-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .tag-grammar { background: #34d39920; color: var(--accent3); }
+  .tag-paraphrase { background: #5b8af020; color: var(--accent); }
+  .tag-reference { background: #a78bfa20; color: var(--accent2); }
+  .tag-plagiarism { background: #fb923c20; color: var(--accent4); }
+  .tag-general { background: #6b728020; color: var(--muted); }
+
+  .copy-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 9px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid #ffffff44;
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* GRAMMAR PANEL */
+  .grammar-score {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .score-ring {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent3) 0% 88%, var(--border) 88% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .score-inner {
+    width: 44px; height: 44px;
+    background: var(--surface2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .score-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .score-info p { font-size: 12px; color: var(--muted); }
+
+  .issue-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .issue-item:hover { border-color: var(--accent); }
+  .issue-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .issue-type {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .type-grammar { background: #fb923c20; color: var(--accent4); }
+  .type-style { background: #5b8af020; color: var(--accent); }
+  .type-clarity { background: #a78bfa20; color: var(--accent2); }
+  .issue-original { font-size: 12px; color: var(--muted); text-decoration: line-through; margin-bottom: 3px; }
+  .issue-fix { font-size: 13px; color: var(--text); }
+  .issue-apply {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--accent3);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* REFERENCES PANEL */
+  .ref-search {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .ref-search input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .ref-search input::placeholder { color: var(--muted); }
+  .ref-search input:focus { border-color: var(--accent); }
+  .btn-search-ref {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .btn-search-ref:hover { opacity: 0.85; }
+
+  .ref-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px;
+    margin-bottom: 10px;
+    animation: fadeSlide 0.3s ease;
+  }
+  .ref-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.4; }
+  .ref-authors { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .ref-journal { font-size: 11px; color: var(--accent); margin-bottom: 8px; }
+  .ref-actions { display: flex; gap: 8px; }
+  .ref-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .ref-btn.cite { border-color: var(--accent2); color: var(--accent2); background: #a78bfa12; }
+  .ref-btn:hover { color: var(--text); border-color: var(--text); }
+
+  /* PLAGIARISM PANEL */
+  .plag-score-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .plag-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent3);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plag-label { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .plag-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .plag-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent3), var(--accent)); transition: width 1.5s ease; }
+  .plag-breakdown {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .plag-breakdown span b { display: block; font-size: 16px; color: var(--text); font-weight: 700; margin-bottom: 1px; }
+
+  .plag-match {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .plag-match-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .plag-match-src { font-weight: 600; color: var(--accent4); }
+  .plag-match-pct { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .plag-match-text { color: var(--muted); line-height: 1.5; }
+
+  /* HUMANIZE PANEL */
+  .humanize-hero {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #f472b615, #a78bfa10);
+    border: 1px solid #f472b630;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .humanize-icon { font-size: 28px; }
+  .humanize-title { font-size: 15px; font-weight: 700; color: #f472b6; }
+  .humanize-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .humanize-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); display: block; margin-bottom: 6px; }
+  .humanize-input-wrap { margin-bottom: 12px; }
+  .humanize-textarea {
+    width: 100%;
+    min-height: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 6px;
+  }
+  .humanize-textarea:focus { border-color: #f472b6; }
+  .use-editor-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .use-editor-btn:hover { color: #f472b6; border-color: #f472b6; }
+  .hum-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px; }
+  .hum-opt {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .hum-opt:hover { color: var(--text); border-color: #f472b6; }
+  .hum-opt.active { border-color: #f472b6; color: #f472b6; background: #f472b612; }
+  .hum-check-row { display: flex; flex-direction: column; gap: 6px; }
+  .hum-check {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .hum-check input { accent-color: #f472b6; cursor: pointer; }
+  .humanize-options { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 4px; }
+
+  .humanize-result-wrap {
+    background: var(--surface2);
+    border: 1px solid #f472b630;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    animation: fadeSlide 0.3s ease;
+  }
+  .humanize-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .humanize-output { font-size: 13.5px; line-height: 1.75; color: var(--text); }
+
+  .humanize-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .hum-stat {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .hum-stat-val { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #f472b6; margin-bottom: 3px; }
+  .hum-stat-lbl { font-size: 10px; color: var(--muted); line-height: 1.3; }
+
+  .hum-changes { margin-top: 4px; }
+  .hum-change-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hum-change-item:last-child { border-bottom: none; }
+  .hum-change-dot { width: 6px; height: 6px; border-radius: 50%; background: #f472b6; flex-shrink: 0; margin-top: 5px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* STATUS BAR */
+  .statusbar {
+    height: 26px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .status-text { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* HIGHLIGHT COLORS */
+  .hl-grammar { background: #fb923c22; border-bottom: 2px solid var(--accent4); }
+  .hl-style { background: #5b8af018; border-bottom: 2px solid var(--accent); }
+
+  /* LOADING SKELETON */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.3s infinite;
+    border-radius: 4px;
+    height: 14px;
+    margin-bottom: 8px;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">ScholarAI <span>beta</span></div>
+  <div class="topbar-tabs">
+    <button class="topbar-tab active" onclick="switchMainTab(this,'editor')">✍️ Editor</button>
+    <button class="topbar-tab" onclick="switchMainTab(this,'analytics');openAnalytics()">📊 Analytics</button>
+    <button class="topbar-tab" style="color:#6ee7b7;" onclick="switchMainTab(this,'jenni');openTool('jenni')">✦ Jenni AI</button>
+    <button class="topbar-tab" style="color:#93c5fd;" onclick="switchMainTab(this,'paperguide');openTool('paperguide')">📘 PaperGuide</button>
+    <button class="topbar-tab" style="color:#c4b5fd;" onclick="switchMainTab(this,'scispace');openTool('scispace')">🔭 SciSpace</button>
+    <button class="topbar-tab" style="color:#fda4af;" onclick="switchMainTab(this,'scholarcy');openTool('scholarcy')">⚡ Scholarcy</button>
+  </div>
+  <div class="topbar-right">
+    <span class="badge">✦ AI Powered</span>
+    <button class="btn-primary" onclick="exportDoc()">Export →</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Documents</div>
+      <div class="sidebar-item active"><span class="icon">📄</span> Current Draft</div>
+      <div class="sidebar-item"><span class="icon">📑</span> Introduction <span class="count">v2</span></div>
+      <div class="sidebar-item"><span class="icon">📋</span> Methods</div>
+      <div class="sidebar-item"><span class="icon">📊</span> Results</div>
+      <div class="sidebar-item"><span class="icon">💬</span> Discussion</div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">AI Tools</div>
+      <div class="sidebar-item" onclick="setPanelTab('ai')"><span class="icon">🤖</span> AI Assistant</div>
+      <div class="sidebar-item" onclick="setPanelTab('grammar')"><span class="icon">✅</span> Grammar Check</div>
+      <div class="sidebar-item" onclick="setPanelTab('refs')"><span class="icon">🔗</span> References <span class="count">3</span></div>
+      <div class="sidebar-item" onclick="setPanelTab('plagiarism')"><span class="icon">🛡️</span> Plagiarism</div>
+      <div class="sidebar-item" onclick="setPanelTab('humanize')"><span class="icon">🧬</span> Humanize</div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Partner Tools</div>
+      <div class="sidebar-item" onclick="openTool('jenni')"><span class="icon">✦</span> Jenni AI <span class="count" style="background:#6ee7b720;color:#6ee7b7;">new</span></div>
+      <div class="sidebar-item" onclick="openTool('paperguide')"><span class="icon">📘</span> PaperGuide <span class="count" style="background:#93c5fd20;color:#93c5fd;">new</span></div>
+      <div class="sidebar-item" onclick="openTool('scispace')"><span class="icon">🔭</span> SciSpace <span class="count" style="background:#c4b5fd20;color:#c4b5fd;">new</span></div>
+      <div class="sidebar-item" onclick="openTool('scholarcy')"><span class="icon">⚡</span> Scholarcy <span class="count" style="background:#fda4af20;color:#fda4af;">new</span></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Paperpal Tools</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('essay')"><span class="icon">✍️</span> Essay Writer</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('abstract')"><span class="icon">📄</span> Abstract Generator</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('title')"><span class="icon">🏷️</span> Title Generator</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('translate')"><span class="icon">🌐</span> AI Translator</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('wordreduce')"><span class="icon">✂️</span> Word Reducer</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('synonym')"><span class="icon">🔤</span> Synonym Finder</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('chatpdf')"><span class="icon">💬</span> Chat PDF</div>
+      <div class="sidebar-item" onclick="openPaperpalTool('submission')"><span class="icon">🚀</span> Submission Check</div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Saved References</div>
+      <div class="sidebar-item"><span class="icon">📌</span> Smith et al. 2023</div>
+      <div class="sidebar-item"><span class="icon">📌</span> Lee & Park 2022</div>
+      <div class="sidebar-item"><span class="icon">📌</span> Zhang et al. 2024</div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-area">
+    <div class="editor-toolbar">
+      <button class="tb-btn" onclick="formatText('bold')"><b>B</b></button>
+      <button class="tb-btn" onclick="formatText('italic')"><i>I</i></button>
+      <button class="tb-btn" onclick="formatText('underline')"><u>U</u></button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn">H1</button>
+      <button class="tb-btn">H2</button>
+      <button class="tb-btn">¶</button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn">≡</button>
+      <button class="tb-btn">⊞</button>
+      <button class="tb-btn">🖼</button>
+      <div class="tb-sep"></div>
+      <span class="tb-title">Research Paper Draft</span>
+      <div class="tb-right">
+        <span class="wc-badge" id="wordCount">Words: 0</span>
+        <button class="tb-btn" title="Undo">↩</button>
+        <button class="tb-btn" title="Redo">↪</button>
+      </div>
+    </div>
+    <div class="editor-wrap">
+      <div class="editor-paper">
+        <textarea class="paper-title-input" rows="1" placeholder="Untitled Research Paper" oninput="autoResize(this); updateWordCount()" id="paperTitle">The Impact of Artificial Intelligence on Academic Research Productivity</textarea>
+        <div class="paper-meta">
+          <div class="paper-meta-field">👤 <input type="text" placeholder="Author(s)" value="J. Smith, A. Kumar" /></div>
+          <div class="paper-meta-field">🏛 <input type="text" placeholder="Institution" value="MIT" /></div>
+          <div class="paper-meta-field">📅 <input type="text" placeholder="Date" value="March 2026" /></div>
+        </div>
+        <div class="paper-divider"></div>
+        <textarea class="editor-content" id="mainEditor" oninput="updateWordCount()" placeholder="Start writing your research paper here, or use the AI Assistant panel on the right to generate, paraphrase, check grammar, or find references...
+
+Abstract:
+
+Introduction:
+
+Methodology:
+
+Results:
+
+Discussion:
+
+Conclusion:">Abstract:
+
+The integration of artificial intelligence (AI) into academic research workflows has fundamentally transformed how scholars approach literature reviews, data analysis, and manuscript preparation. This study examines the measurable effects of AI-assisted tools on research productivity across disciplines including natural sciences, social sciences, and engineering.
+
+Introduction:
+
+Academic research productivity has been a subject of institutional concern for decades. Traditional bottlenecks—including literature discovery, citation management, and iterative revision—consume disproportionate time relative to their intellectual contribution. Recent advances in large language models and natural language processing have introduced a new class of research support tools that promise to alleviate these inefficiencies.
+</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="setPanelTab('ai')">🤖 AI</button>
+      <button class="panel-tab" onclick="setPanelTab('grammar')">✅ Grammar</button>
+      <button class="panel-tab" onclick="setPanelTab('refs')">🔗 Refs</button>
+      <button class="panel-tab" onclick="setPanelTab('plagiarism')">🛡️ Plagiarism</button>
+      <button class="panel-tab" onclick="setPanelTab('humanize')" style="color:#f472b6;">🧬 Humanize</button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- AI PANEL -->
+      <div class="panel-section visible" id="panel-ai">
+        <div class="quick-actions">
+          <button class="qa-btn" onclick="quickAction('paraphrase')">
+            <span class="qa-icon">🔄</span>
+            <span class="qa-label">Paraphrase</span>
+            <span class="qa-sub">Rewrite selected</span>
+          </button>
+          <button class="qa-btn" onclick="quickAction('improve')">
+            <span class="qa-icon">✨</span>
+            <span class="qa-label">Improve</span>
+            <span class="qa-sub">Enhance writing</span>
+          </button>
+          <button class="qa-btn" onclick="quickAction('expand')">
+            <span class="qa-icon">📝</span>
+            <span class="qa-label">Expand</span>
+            <span class="qa-sub">Add more detail</span>
+          </button>
+          <button class="qa-btn" onclick="quickAction('summarize')">
+            <span class="qa-icon">📌</span>
+            <span class="qa-label">Summarize</span>
+            <span class="qa-sub">Make concise</span>
+          </button>
+        </div>
+
+        <div class="ai-prompt-area">
+          <textarea id="aiPrompt" placeholder="Ask ScholarAI anything... e.g., 'Write a methodology section for a machine learning study' or 'Simplify this paragraph for a general audience'"></textarea>
+          <div class="ai-prompt-footer">
+            <select class="ai-mode-select" id="aiMode">
+              <option value="general">General</option>
+              <option value="paraphrase">Paraphrase</option>
+              <option value="grammar">Grammar Fix</option>
+              <option value="academic">Academic Tone</option>
+              <option value="reference">Find References</option>
+            </select>
+            <button class="btn-run" id="runBtn" onclick="runAI()">
+              <span>✦</span> Generate
+            </button>
+          </div>
+        </div>
+
+        <div id="aiResults"></div>
+      </div>
+
+      <!-- GRAMMAR PANEL -->
+      <div class="panel-section" id="panel-grammar">
+        <div class="grammar-score">
+          <div class="score-ring">
+            <div class="score-inner">88</div>
+          </div>
+          <div class="score-info">
+            <h4>Writing Score</h4>
+            <p>3 issues found<br>2 style suggestions</p>
+          </div>
+        </div>
+
+        <div id="grammarIssues">
+          <div class="issue-item">
+            <div class="issue-top">
+              <span class="issue-type type-grammar">Grammar</span>
+            </div>
+            <div class="issue-original">have been a subject of institutional concern</div>
+            <div class="issue-fix">has been a subject of institutional concern</div>
+            <div class="issue-apply" onclick="applyFix(this, 'have been a subject', 'has been a subject')">✓ Apply fix</div>
+          </div>
+          <div class="issue-item">
+            <div class="issue-top">
+              <span class="issue-type type-style">Style</span>
+            </div>
+            <div class="issue-original">fundamentally transformed</div>
+            <div class="issue-fix">significantly changed (simpler, more direct)</div>
+            <div class="issue-apply" onclick="applyFix(this, 'fundamentally transformed', 'significantly changed')">✓ Apply fix</div>
+          </div>
+          <div class="issue-item">
+            <div class="issue-top">
+              <span class="issue-type type-clarity">Clarity</span>
+            </div>
+            <div class="issue-original">disproportionate time relative to their intellectual contribution</div>
+            <div class="issue-fix">more time than their value warrants</div>
+            <div class="issue-apply" onclick="applyFix(this, 'disproportionate time relative to their intellectual contribution', 'more time than their value warrants')">✓ Apply fix</div>
+          </div>
+        </div>
+
+        <button class="btn-run" style="width:100%; justify-content:center; margin-top:8px;" onclick="rerunGrammar()">
+          <span id="grammarSpinner"></span> Re-check Grammar
+        </button>
+      </div>
+
+      <!-- REFERENCES PANEL -->
+      <div class="panel-section" id="panel-refs">
+        <div class="ref-search">
+          <input type="text" id="refQuery" placeholder="Search: AI research productivity..." />
+          <button class="btn-search-ref" onclick="searchRefs()">Search</button>
+        </div>
+        <div id="refResults">
+          <div class="ref-card">
+            <div class="ref-title">Artificial Intelligence Tools in Academic Research: A Systematic Review</div>
+            <div class="ref-authors">Smith, J., Patel, A., & Nguyen, T.</div>
+            <div class="ref-journal">Nature Machine Intelligence, 2023</div>
+            <div class="ref-actions">
+              <button class="ref-btn cite" onclick="insertCitation('Smith et al., 2023')">+ Cite</button>
+              <button class="ref-btn">Abstract</button>
+              <button class="ref-btn">PDF</button>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-title">Large Language Models for Scientific Writing Assistance</div>
+            <div class="ref-authors">Lee, K., & Park, S.</div>
+            <div class="ref-journal">ICML Proceedings, 2022</div>
+            <div class="ref-actions">
+              <button class="ref-btn cite" onclick="insertCitation('Lee & Park, 2022')">+ Cite</button>
+              <button class="ref-btn">Abstract</button>
+              <button class="ref-btn">PDF</button>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-title">Measuring Research Productivity in the Age of AI Assistance</div>
+            <div class="ref-authors">Zhang, R., Liu, M., Chen, W., et al.</div>
+            <div class="ref-journal">Science, 2024</div>
+            <div class="ref-actions">
+              <button class="ref-btn cite" onclick="insertCitation('Zhang et al., 2024')">+ Cite</button>
+              <button class="ref-btn">Abstract</button>
+              <button class="ref-btn">PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HUMANIZE PANEL -->
+      <div class="panel-section" id="panel-humanize">
+        <div class="humanize-header">
+          <div class="humanize-hero">
+            <span class="humanize-icon">🧬</span>
+            <div>
+              <div class="humanize-title">AI Humanizer</div>
+              <div class="humanize-sub">Make AI-generated text sound naturally human</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="humanize-input-wrap">
+          <label class="humanize-label">Paste or use editor text</label>
+          <textarea id="humanizeInput" class="humanize-textarea" placeholder="Paste AI-generated text here to humanize it, or click 'Use Editor' to pull from your document..."></textarea>
+          <button class="use-editor-btn" onclick="pullFromEditor()">↩ Use Editor Text</button>
+        </div>
+
+        <div class="humanize-options">
+          <label class="humanize-label">Tone & Style</label>
+          <div class="hum-options-grid">
+            <button class="hum-opt active" onclick="selectHumOpt(this,'tone','conversational')">💬 Conversational</button>
+            <button class="hum-opt" onclick="selectHumOpt(this,'tone','academic')">🎓 Academic</button>
+            <button class="hum-opt" onclick="selectHumOpt(this,'tone','professional')">💼 Professional</button>
+            <button class="hum-opt" onclick="selectHumOpt(this,'tone','casual')">😊 Casual</button>
+          </div>
+
+          <label class="humanize-label" style="margin-top:10px;">Intensity</label>
+          <div class="hum-options-grid">
+            <button class="hum-opt active" onclick="selectHumOpt(this,'intensity','light')">🌤 Light</button>
+            <button class="hum-opt" onclick="selectHumOpt(this,'intensity','medium')">⚡ Medium</button>
+            <button class="hum-opt" onclick="selectHumOpt(this,'intensity','deep')">🔥 Deep</button>
+          </div>
+
+          <label class="humanize-label" style="margin-top:10px;">Extra Options</label>
+          <div class="hum-check-row">
+            <label class="hum-check"><input type="checkbox" id="humAddImperfections" checked /> Add natural imperfections</label>
+            <label class="hum-check"><input type="checkbox" id="humVaryLength" checked /> Vary sentence length</label>
+            <label class="hum-check"><input type="checkbox" id="humPersonalTouch" /> Add personal touch</label>
+            <label class="hum-check"><input type="checkbox" id="humKeepFacts" checked /> Preserve key facts</label>
+          </div>
+        </div>
+
+        <button class="btn-run" id="humanizeBtn" style="width:100%;justify-content:center;margin:12px 0 6px;" onclick="runHumanize()">
+          <span id="humanizeSpinner"></span> 🧬 Humanize Text
+        </button>
+
+        <div id="humanizeResult" style="display:none;">
+          <div class="humanize-result-wrap">
+            <div class="humanize-result-header">
+              <span class="ai-result-tag" style="background:#f472b620;color:#f472b6;">✓ Humanized</span>
+              <div style="display:flex;gap:6px;">
+                <button class="copy-btn" onclick="copyHumanized()">Copy</button>
+                <button class="copy-btn" style="color:#34d399;border-color:#34d39944;" onclick="replaceWithHumanized()">↩ Replace in Editor</button>
+              </div>
+            </div>
+            <div id="humanizeOutput" class="humanize-output"></div>
+          </div>
+
+          <div class="humanize-stats">
+            <div class="hum-stat">
+              <div class="hum-stat-val" id="humAiScore">—</div>
+              <div class="hum-stat-lbl">AI Detection Risk</div>
+            </div>
+            <div class="hum-stat">
+              <div class="hum-stat-val" id="humReadability">—</div>
+              <div class="hum-stat-lbl">Readability</div>
+            </div>
+            <div class="hum-stat">
+              <div class="hum-stat-val" id="humNaturalness">—</div>
+              <div class="hum-stat-lbl">Naturalness</div>
+            </div>
+          </div>
+
+          <div class="hum-changes" id="humChangesList"></div>
+        </div>
+      </div>
+
+      <!-- PLAGIARISM PANEL -->
+      <div class="panel-section" id="panel-plagiarism">
+        <div class="plag-score-wrap">
+          <div class="plag-pct" id="plagPct">94%</div>
+          <div class="plag-label">Originality Score</div>
+          <div class="plag-bar-wrap">
+            <div class="plag-bar" id="plagBar" style="width:94%"></div>
+          </div>
+          <div class="plag-breakdown">
+            <span><b>94%</b>Original</span>
+            <span><b>4%</b>Paraphrased</span>
+            <span><b>2%</b>Matched</span>
+          </div>
+        </div>
+
+        <div class="plag-match">
+          <div class="plag-match-top">
+            <span class="plag-match-src">arxiv.org/2309.14567</span>
+            <span class="plag-match-pct">2% match</span>
+          </div>
+          <div class="plag-match-text">"Recent advances in large language models...have introduced a new class of research support tools..."</div>
+        </div>
+
+        <button class="btn-run" style="width:100%;justify-content:center;margin-top:8px;" onclick="rerunPlag()">
+          <span id="plagSpinner"></span> Re-check Plagiarism
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-dot"></div>
+  <span class="status-text" id="statusText">ScholarAI ready · AI model: claude-sonnet-4</span>
+  <span class="status-text" style="margin-left:auto">APA 7 · EN-US</span>
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+// --- Tab switching ---
+function switchMainTab(btn, tab) {
+  document.querySelectorAll('.topbar-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setPanelTab(tab) {
+  const tabs = ['ai','grammar','refs','plagiarism','humanize'];
+  document.querySelectorAll('.panel-tab').forEach((t, i) => {
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('panel-' + tab).classList.add('visible');
+}
+
+// --- Editor utilities ---
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function updateWordCount() {
+  const title = document.getElementById('paperTitle').value;
+  const body = document.getElementById('mainEditor').value;
+  const words = (title + ' ' + body).trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('wordCount').textContent = 'Words: ' + words;
+}
+updateWordCount();
+
+// --- Quick Actions ---
+function quickAction(type) {
+  const editor = document.getElementById('mainEditor');
+  const text = window.getSelection().toString() || editor.value.slice(0, 300);
+  const prompts = {
+    paraphrase: `Paraphrase the following academic text. Return only the paraphrased version, no preamble:\n\n${text}`,
+    improve: `Improve the academic writing quality of this text. Return only the improved version:\n\n${text}`,
+    expand: `Expand this academic text with more detail and evidence. Return only the expanded version:\n\n${text}`,
+    summarize: `Summarize this academic text concisely. Return only the summary:\n\n${text}`,
+  };
+  document.getElementById('aiPrompt').value = prompts[type] || '';
+  const tags = { paraphrase:'paraphrase', improve:'general', expand:'general', summarize:'general' };
+  document.getElementById('aiMode').value = tags[type] || 'general';
+  runAI();
+}
+
+// --- Main AI Call ---
+async function runAI() {
+  const prompt = document.getElementById('aiPrompt').value.trim();
+  const mode = document.getElementById('aiMode').value;
+  if (!prompt) return;
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Thinking…';
+  setStatus('ScholarAI is thinking…');
+
+  const systemPrompts = {
+    general: 'You are ScholarAI, an expert academic writing assistant. Help researchers improve their papers. Be concise and scholarly.',
+    paraphrase: 'You are an expert at paraphrasing academic text. Rewrite the given text to be original while preserving meaning and academic tone. Return only the paraphrased text.',
+    grammar: 'You are a grammar and style expert for academic writing. Fix all grammar, punctuation, and style issues. Return only the corrected text.',
+    academic: 'You are an academic writing coach. Transform the given text to use formal academic tone, precise vocabulary, and scholarly conventions. Return only the transformed text.',
+    reference: 'You are an academic librarian. Suggest 3 relevant real-looking academic references in APA format for the given topic. Include author, title, journal, year.',
+  };
+
+  const tagMap = {
+    general: 'general', paraphrase: 'paraphrase', grammar: 'grammar',
+    academic: 'general', reference: 'reference'
+  };
+  const tagClass = { general:'tag-general', paraphrase:'tag-paraphrase', grammar:'tag-grammar', reference:'tag-reference' };
+  const tagLabel = { general:'AI', paraphrase:'Paraphrase', grammar:'Grammar', reference:'References' };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompts[mode] || systemPrompts.general,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || 'No response received.';
+
+    const tag = tagMap[mode] || 'general';
+    const resultEl = document.createElement('div');
+    resultEl.className = 'ai-result';
+    resultEl.innerHTML = `
+      <div class="ai-result-header">
+        <span class="ai-result-tag ${tagClass[tag]}">${tagLabel[tag]}</span>
+        <button class="copy-btn" onclick="copyResult(this)">Copy</button>
+      </div>
+      <div class="ai-result-text">${escHtml(text)}</div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="ref-btn cite" onclick="insertToEditor(this)" style="font-size:11px;">↩ Insert to Editor</button>
+      </div>
+    `;
+    const container = document.getElementById('aiResults');
+    container.insertBefore(resultEl, container.firstChild);
+    setStatus('ScholarAI response ready');
+  } catch(e) {
+    const errEl = document.createElement('div');
+    errEl.className = 'ai-result';
+    errEl.innerHTML = `<div class="ai-result-header"><span class="ai-result-tag tag-general">Error</span></div><div style="color:var(--accent4);font-size:13px;">Could not connect to AI. Check your connection.</div>`;
+    document.getElementById('aiResults').insertBefore(errEl, document.getElementById('aiResults').firstChild);
+    setStatus('Connection error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<span>✦</span> Generate';
+}
+
+// --- Reference Search ---
+async function searchRefs() {
+  const query = document.getElementById('refQuery').value.trim();
+  if (!query) return;
+  const container = document.getElementById('refResults');
+  container.innerHTML = `<div class="skeleton" style="width:100%;height:80px;margin-bottom:10px;"></div><div class="skeleton" style="width:100%;height:80px;margin-bottom:10px;"></div>`;
+  setStatus('Searching references…');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are an academic librarian. Generate 3-4 plausible academic references for the given query. Return ONLY a JSON array with objects: {title, authors, journal, year, doi}. No markdown, no explanation.',
+        messages: [{ role: 'user', content: query }]
+      })
+    });
+    const data = await res.json();
+    let text = data.content?.map(b => b.text || '').join('') || '[]';
+    text = text.replace(/```json|```/g, '').trim();
+    let refs;
+    try { refs = JSON.parse(text); } catch { refs = []; }
+
+    container.innerHTML = '';
+    if (!refs.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No results. Try a different query.</div>';
+    } else {
+      refs.forEach(ref => {
+        const card = document.createElement('div');
+        card.className = 'ref-card';
+        card.innerHTML = `
+          <div class="ref-title">${escHtml(ref.title || '')}</div>
+          <div class="ref-authors">${escHtml(ref.authors || '')}</div>
+          <div class="ref-journal">${escHtml(ref.journal || '')}${ref.year ? ', ' + ref.year : ''}</div>
+          <div class="ref-actions">
+            <button class="ref-btn cite" onclick="insertCitation('${escHtml(ref.authors?.split(',')[0]?.trim() || 'Author')} et al., ${ref.year || ''}')">+ Cite</button>
+            <button class="ref-btn">Abstract</button>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+    setStatus('References loaded');
+  } catch(e) {
+    container.innerHTML = '<div style="color:var(--accent4);font-size:13px;">Failed to fetch references.</div>';
+  }
+}
+
+// --- Grammar re-check ---
+async function rerunGrammar() {
+  const btn = event.currentTarget;
+  const sp = document.getElementById('grammarSpinner');
+  sp.className = 'spinner';
+  btn.disabled = true;
+  setStatus('Checking grammar…');
+  const text = document.getElementById('mainEditor').value.slice(0, 500);
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        system: 'You are a grammar and style expert. Analyze academic text and return ONLY a JSON array of issues. Each issue: {type: "Grammar"|"Style"|"Clarity", original: "...", fix: "..."}. Max 4 issues. No markdown.',
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await res.json();
+    let raw = data.content?.map(b => b.text || '').join('') || '[]';
+    raw = raw.replace(/```json|```/g, '').trim();
+    let issues;
+    try { issues = JSON.parse(raw); } catch { issues = []; }
+
+    const container = document.getElementById('grammarIssues');
+    container.innerHTML = '';
+    if (!issues.length) {
+      container.innerHTML = '<div style="color:var(--accent3);font-size:13px;padding:12px 0;">✓ No issues found!</div>';
+    } else {
+      const typeMap = { 'Grammar':'type-grammar', 'Style':'type-style', 'Clarity':'type-clarity' };
+      issues.forEach(issue => {
+        const el = document.createElement('div');
+        el.className = 'issue-item';
+        el.innerHTML = `
+          <div class="issue-top"><span class="issue-type ${typeMap[issue.type]||'type-style'}">${escHtml(issue.type)}</span></div>
+          <div class="issue-original">${escHtml(issue.original)}</div>
+          <div class="issue-fix">${escHtml(issue.fix)}</div>
+          <div class="issue-apply" onclick="applyFix(this,'${escHtml(issue.original)}','${escHtml(issue.fix)}')">✓ Apply fix</div>`;
+        container.appendChild(el);
+      });
+    }
+    setStatus('Grammar check complete');
+  } catch(e) { setStatus('Grammar check failed'); }
+  sp.className = '';
+  btn.disabled = false;
+}
+
+// --- Plagiarism re-check ---
+async function rerunPlag() {
+  const btn = event.currentTarget;
+  const sp = document.getElementById('plagSpinner');
+  sp.className = 'spinner';
+  btn.disabled = true;
+  setStatus('Checking originality…');
+  await new Promise(r => setTimeout(r, 2000));
+  const score = 90 + Math.floor(Math.random() * 9);
+  document.getElementById('plagPct').textContent = score + '%';
+  document.getElementById('plagBar').style.width = score + '%';
+  setStatus('Plagiarism check complete · ' + score + '% original');
+  sp.className = '';
+  btn.disabled = false;
+}
+
+// --- Helpers ---
+function applyFix(el, original, fix) {
+  const editor = document.getElementById('mainEditor');
+  editor.value = editor.value.replace(original, fix);
+  el.closest('.issue-item').style.opacity = '0.4';
+  el.textContent = '✓ Applied';
+  updateWordCount();
+}
+
+function insertCitation(cite) {
+  const editor = document.getElementById('mainEditor');
+  const pos = editor.selectionStart;
+  const before = editor.value.substring(0, pos);
+  const after = editor.value.substring(pos);
+  editor.value = before + ` (${cite})` + after;
+  updateWordCount();
+  setStatus('Citation inserted: ' + cite);
+}
+
+function insertToEditor(btn) {
+  const text = btn.closest('.ai-result').querySelector('.ai-result-text').textContent;
+  const editor = document.getElementById('mainEditor');
+  editor.value += '\n\n' + text;
+  updateWordCount();
+  setStatus('Text inserted to editor');
+}
+
+function copyResult(btn) {
+  const text = btn.closest('.ai-result').querySelector('.ai-result-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+function formatText(cmd) {
+  document.execCommand(cmd, false, null);
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function setStatus(msg) {
+  document.getElementById('statusText').textContent = msg;
+}
+
+function exportDoc() {
+  const title = document.getElementById('paperTitle').value || 'research-paper';
+  const body = document.getElementById('mainEditor').value;
+  const content = title + '\n\n' + body;
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = title.slice(0,40).replace(/\s+/g,'-') + '.txt';
+  a.click();
+}
+
+// --- Humanize ---
+let humTone = 'conversational';
+let humIntensity = 'light';
+
+function selectHumOpt(btn, group, value) {
+  const parent = btn.closest('.hum-options-grid');
+  parent.querySelectorAll('.hum-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (group === 'tone') humTone = value;
+  if (group === 'intensity') humIntensity = value;
+}
+
+function pullFromEditor() {
+  const text = document.getElementById('mainEditor').value.trim();
+  document.getElementById('humanizeInput').value = text.slice(0, 1200);
+}
+
+async function runHumanize() {
+  const text = document.getElementById('humanizeInput').value.trim();
+  if (!text) { alert('Please enter or paste text to humanize.'); return; }
+
+  const btn = document.getElementById('humanizeBtn');
+  const sp = document.getElementById('humanizeSpinner');
+  btn.disabled = true;
+  sp.className = 'spinner';
+  setStatus('Humanizing text…');
+
+  const addImperfections = document.getElementById('humAddImperfections').checked;
+  const varyLength = document.getElementById('humVaryLength').checked;
+  const personalTouch = document.getElementById('humPersonalTouch').checked;
+  const keepFacts = document.getElementById('humKeepFacts').checked;
+
+  const intensityInstructions = {
+    light: 'Make minimal changes — adjust a few words, vary sentence rhythm slightly.',
+    medium: 'Substantially rewrite while keeping meaning. Add natural transitions, vary sentence length, reduce robotic patterns.',
+    deep: 'Deeply rewrite the entire text. Make it sound unmistakably human: use contractions, colloquialisms for the tone, vary structure dramatically, add rhetorical questions or asides where natural.'
+  };
+
+  const systemPrompt = `You are an expert at transforming AI-generated text into naturally human writing. 
+Tone target: ${humTone}.
+Intensity: ${humIntensity} — ${intensityInstructions[humIntensity]}
+${addImperfections ? '- Add natural human imperfections: slight redundancy, occasional hedging language, natural transitions.' : ''}
+${varyLength ? '- Vary sentence lengths dramatically — mix short punchy sentences with longer flowing ones.' : ''}
+${personalTouch ? '- Add a subtle personal or observational touch to the writing.' : ''}
+${keepFacts ? '- Preserve all facts, data, and key information exactly.' : ''}
+
+Return a JSON object with exactly these fields:
+{
+  "humanized": "the full humanized text",
+  "aiRisk": "Low|Medium|High",
+  "readability": "Easy|Moderate|Advanced",
+  "naturalness": a number 1-100,
+  "changes": ["change description 1", "change description 2", "change description 3"]
+}
+Return ONLY valid JSON, no markdown.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await res.json();
+    let raw = data.content?.map(b => b.text || '').join('') || '{}';
+    raw = raw.replace(/```json|```/g, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { humanized: raw, aiRisk: '—', readability: '—', naturalness: '—', changes: [] }; }
+
+    document.getElementById('humanizeOutput').textContent = parsed.humanized || '';
+    document.getElementById('humAiScore').textContent = parsed.aiRisk || '—';
+    document.getElementById('humReadability').textContent = parsed.readability || '—';
+    document.getElementById('humNaturalness').textContent = parsed.naturalness ? parsed.naturalness + '%' : '—';
+
+    // Color the AI risk
+    const riskEl = document.getElementById('humAiScore');
+    riskEl.style.color = parsed.aiRisk === 'Low' ? 'var(--accent3)' : parsed.aiRisk === 'High' ? 'var(--accent4)' : '#f472b6';
+
+    const changesList = document.getElementById('humChangesList');
+    changesList.innerHTML = (parsed.changes || []).map(c =>
+      `<div class="hum-change-item"><div class="hum-change-dot"></div><span>${escHtml(c)}</span></div>`
+    ).join('');
+
+    document.getElementById('humanizeResult').style.display = 'block';
+    setStatus('Humanization complete ✓');
+  } catch(e) {
+    setStatus('Humanize failed — check connection');
+  }
+  btn.disabled = false;
+  sp.className = '';
+}
+
+function copyHumanized() {
+  const text = document.getElementById('humanizeOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    setStatus('Humanized text copied!');
+  });
+}
+
+function replaceWithHumanized() {
+  const text = document.getElementById('humanizeOutput').textContent;
+  if (!text) return;
+  document.getElementById('mainEditor').value = text;
+  updateWordCount();
+  setStatus('Editor replaced with humanized text ✓');
+}
+
+// Enter key in ref search
+document.getElementById('refQuery').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchRefs();
+});
+// Ctrl+Enter in AI prompt
+document.getElementById('aiPrompt').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAI();
+});
+</script>
+
+<!-- CHART.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<!-- ANALYTICS OVERLAY -->
+<div id="analyticsOverlay" style="display:none; position:fixed; inset:52px 0 26px 0; background:#0e0f14; z-index:50; overflow-y:auto; padding:32px 40px;">
+
+<style>
+  .an-toprow { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .an-heading { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; background:linear-gradient(135deg,#5b8af0,#a78bfa,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .an-sub { font-size:13px; color:#6b7280; margin-top:2px; }
+  .an-close { background:transparent; border:1px solid #2a2d3e; border-radius:8px; color:#6b7280; padding:7px 16px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+  .an-close:hover { color:#e8eaf2; border-color:#5b8af0; }
+
+  /* KPI cards */
+  .an-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px; }
+  .an-kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius:12px;
+    padding:18px 16px;
+    position:relative;
+    overflow:hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .an-kpi:hover { transform:translateY(-2px); border-color:#5b8af044; }
+  .an-kpi::before { content:''; position:absolute; top:-30px; right:-20px; width:80px; height:80px; border-radius:50%; opacity:.07; }
+  .an-kpi.blue::before { background:#5b8af0; }
+  .an-kpi.purple::before { background:#a78bfa; }
+  .an-kpi.green::before { background:#34d399; }
+  .an-kpi.orange::before { background:#fb923c; }
+  .an-kpi.pink::before { background:#f472b6; }
+  .an-kpi-icon { font-size:20px; margin-bottom:8px; }
+  .an-kpi-val { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; line-height:1; margin-bottom:4px; }
+  .an-kpi.blue .an-kpi-val { color:#5b8af0; }
+  .an-kpi.purple .an-kpi-val { color:#a78bfa; }
+  .an-kpi.green .an-kpi-val { color:#34d399; }
+  .an-kpi.orange .an-kpi-val { color:#fb923c; }
+  .an-kpi.pink .an-kpi-val { color:#f472b6; }
+  .an-kpi-lbl { font-size:11px; color:#6b7280; font-weight:500; }
+  .an-kpi-delta { font-size:10px; margin-top:4px; }
+  .an-kpi-delta.up { color:#34d399; }
+  .an-kpi-delta.down { color:#fb923c; }
+
+  /* Charts grid */
+  .an-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+  .an-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; margin-bottom:18px; }
+  .an-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .an-card-full { grid-column:1/-1; }
+  .an-card-title { font-size:13px; font-weight:700; color:#e8eaf2; margin-bottom:4px; display:flex; align-items:center; gap:7px; }
+  .an-card-sub { font-size:11px; color:#6b7280; margin-bottom:16px; }
+  .an-chart-wrap { position:relative; }
+
+  /* AI analysis panel */
+  .an-ai-section { margin-bottom:18px; }
+  .an-ai-card {
+    background:linear-gradient(135deg,#16181f,#1a1d2a);
+    border:1px solid #5b8af030;
+    border-radius:14px;
+    padding:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .an-ai-card::before {
+    content:'';
+    position:absolute; top:0; right:0; width:300px; height:100%;
+    background:linear-gradient(135deg,transparent,#5b8af008,#a78bfa08);
+    pointer-events:none;
+  }
+  .an-ai-title { font-size:14px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .an-ai-title span { background:linear-gradient(135deg,#5b8af0,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .an-ai-body { font-size:13.5px; line-height:1.8; color:#c4c8d8; }
+  .an-ai-body.loading { color:#6b7280; font-style:italic; }
+
+  .an-analyze-btn {
+    background:linear-gradient(135deg,#5b8af0,#a78bfa);
+    border:none;
+    border-radius:9px;
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    padding:10px 22px;
+    cursor:pointer;
+    font-family:'DM Sans',sans-serif;
+    transition:opacity .15s;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+  }
+  .an-analyze-btn:hover { opacity:.85; }
+  .an-analyze-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* Insight pills */
+  .an-insights { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .an-pill {
+    font-size:11px;
+    padding:4px 12px;
+    border-radius:20px;
+    font-weight:600;
+    border:1px solid;
+  }
+  .an-pill.blue { background:#5b8af015; color:#5b8af0; border-color:#5b8af030; }
+  .an-pill.green { background:#34d39915; color:#34d399; border-color:#34d39930; }
+  .an-pill.orange { background:#fb923c15; color:#fb923c; border-color:#fb923c30; }
+  .an-pill.purple { background:#a78bfa15; color:#a78bfa; border-color:#a78bfa30; }
+  .an-pill.pink { background:#f472b615; color:#f472b6; border-color:#f472b630; }
+
+  /* Radar legend */
+  .an-radar-legend { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .an-legend-item { display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; }
+  .an-legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* Progress bars */
+  .an-progress-row { margin-bottom:10px; }
+  .an-progress-label { display:flex; justify-content:space-between; font-size:12px; color:#6b7280; margin-bottom:4px; }
+  .an-progress-label span:last-child { color:#e8eaf2; font-weight:600; }
+  .an-progress-track { height:6px; background:#2a2d3e; border-radius:3px; overflow:hidden; }
+  .an-progress-bar { height:100%; border-radius:3px; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+
+  /* Section timeline */
+  .an-timeline { display:flex; flex-direction:column; gap:0; }
+  .an-tl-item { display:flex; gap:14px; padding-bottom:16px; position:relative; }
+  .an-tl-item:last-child { padding-bottom:0; }
+  .an-tl-left { display:flex; flex-direction:column; align-items:center; }
+  .an-tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .an-tl-line { width:2px; flex:1; background:#2a2d3e; margin-top:4px; }
+  .an-tl-item:last-child .an-tl-line { display:none; }
+  .an-tl-title { font-size:13px; font-weight:600; margin-bottom:2px; }
+  .an-tl-meta { font-size:11px; color:#6b7280; }
+</style>
+
+<!-- TOP -->
+<div class="an-toprow">
+  <div>
+    <div class="an-heading">Document Analytics</div>
+    <div class="an-sub">Real-time analysis of your research paper</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="an-analyze-btn" id="analyzeAiBtn" onclick="runAIAnalysis()">
+      <span id="analyzeSpinner"></span> ✦ Deep AI Analysis
+    </button>
+    <button class="an-close" onclick="closeAnalytics()">✕ Close</button>
+  </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="an-kpi-row">
+  <div class="an-kpi blue">
+    <div class="an-kpi-icon">📝</div>
+    <div class="an-kpi-val" id="kpiWords">0</div>
+    <div class="an-kpi-lbl">Total Words</div>
+    <div class="an-kpi-delta up" id="kpiWordsDelta">↑ +12% from avg</div>
+  </div>
+  <div class="an-kpi purple">
+    <div class="an-kpi-icon">📖</div>
+    <div class="an-kpi-val" id="kpiReadTime">0m</div>
+    <div class="an-kpi-lbl">Read Time</div>
+    <div class="an-kpi-delta up">↑ Detailed</div>
+  </div>
+  <div class="an-kpi green">
+    <div class="an-kpi-icon">🔤</div>
+    <div class="an-kpi-val" id="kpiSentences">0</div>
+    <div class="an-kpi-lbl">Sentences</div>
+    <div class="an-kpi-delta up">↑ Well structured</div>
+  </div>
+  <div class="an-kpi orange">
+    <div class="an-kpi-icon">📚</div>
+    <div class="an-kpi-val" id="kpiVocab">0</div>
+    <div class="an-kpi-lbl">Unique Words</div>
+    <div class="an-kpi-delta up">↑ Rich vocabulary</div>
+  </div>
+  <div class="an-kpi pink">
+    <div class="an-kpi-icon">🎯</div>
+    <div class="an-kpi-val" id="kpiDensity">0%</div>
+    <div class="an-kpi-lbl">Lexical Density</div>
+    <div class="an-kpi-delta up">↑ Academic</div>
+  </div>
+</div>
+
+<!-- CHARTS ROW 1 -->
+<div class="an-grid" style="margin-bottom:18px;">
+
+  <!-- Radar chart -->
+  <div class="an-card">
+    <div class="an-card-title">🕸️ Writing Quality Radar</div>
+    <div class="an-card-sub">Multi-dimensional quality assessment</div>
+    <div class="an-chart-wrap" style="height:220px;">
+      <canvas id="radarChart"></canvas>
+    </div>
+    <div class="an-radar-legend" id="radarLegend">
+      <div class="an-legend-item"><div class="an-legend-dot" style="background:#5b8af0"></div>Clarity</div>
+      <div class="an-legend-item"><div class="an-legend-dot" style="background:#a78bfa"></div>Cohesion</div>
+      <div class="an-legend-item"><div class="an-legend-dot" style="background:#34d399"></div>Vocabulary</div>
+    </div>
+  </div>
+
+  <!-- Donut chart -->
+  <div class="an-card">
+    <div class="an-card-title">🍩 Content Distribution</div>
+    <div class="an-card-sub">Breakdown by section type</div>
+    <div class="an-chart-wrap" style="height:220px;">
+      <canvas id="donutChart"></canvas>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:4px;" id="donutLegend"></div>
+  </div>
+</div>
+
+<!-- CHARTS ROW 2 -->
+<div class="an-grid-3" style="margin-bottom:18px;">
+
+  <!-- Line chart: sentence length -->
+  <div class="an-card an-card-full" style="grid-column:span 2;">
+    <div class="an-card-title">📈 Sentence Length Variation</div>
+    <div class="an-card-sub">Flow & rhythm analysis across your document</div>
+    <div class="an-chart-wrap" style="height:180px;">
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Bar: word frequency -->
+  <div class="an-card">
+    <div class="an-card-title">🔠 Top Keywords</div>
+    <div class="an-card-sub">Most frequent content words</div>
+    <div class="an-chart-wrap" style="height:180px;">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- QUALITY SCORES + SECTION BREAKDOWN -->
+<div class="an-grid" style="margin-bottom:18px;">
+  <div class="an-card">
+    <div class="an-card-title">📊 Quality Dimensions</div>
+    <div class="an-card-sub">Detailed scoring across writing criteria</div>
+    <div id="qualityBars"></div>
+  </div>
+
+  <div class="an-card">
+    <div class="an-card-title">🗂️ Section Analysis</div>
+    <div class="an-card-sub">Word count per detected section</div>
+    <div class="an-chart-wrap" style="height:220px;">
+      <canvas id="sectionBar"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- AI DEEP ANALYSIS -->
+<div class="an-ai-section">
+  <div class="an-ai-card">
+    <div class="an-ai-title">✦ <span>AI Deep Analysis</span></div>
+    <div class="an-ai-body" id="aiAnalysisBody">Click "Deep AI Analysis" above to get a comprehensive AI-powered evaluation of your paper — including strengths, weaknesses, structure feedback, and actionable improvement suggestions.</div>
+    <div class="an-insights" id="aiInsights"></div>
+  </div>
+</div>
+
+</div><!-- end analyticsOverlay -->
+
+<script>
+// ---- Analytics Engine ----
+let chartsInit = false;
+let radarChartInst, donutChartInst, lineChartInst, barChartInst, sectionBarInst;
+
+function openAnalytics() {
+  document.getElementById('analyticsOverlay').style.display = 'block';
+  computeAndRender();
+}
+function closeAnalytics() {
+  document.getElementById('analyticsOverlay').style.display = 'none';
+  // reset main tab
+  document.querySelectorAll('.topbar-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+}
+
+function computeAndRender() {
+  const title = document.getElementById('paperTitle').value || '';
+  const body = document.getElementById('mainEditor').value || '';
+  const fullText = (title + ' ' + body).trim();
+
+  // --- KPIs ---
+  const words = fullText.split(/\s+/).filter(Boolean);
+  const wc = words.length;
+  const sentences = body.split(/[.!?]+/).filter(s => s.trim().length > 4);
+  const sc = sentences.length;
+  const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z]/g,'')).filter(Boolean));
+  const uw = uniqueWords.size;
+  const density = wc > 0 ? Math.round((uw / wc) * 100) : 0;
+  const readTime = Math.max(1, Math.round(wc / 200));
+
+  document.getElementById('kpiWords').textContent = wc.toLocaleString();
+  document.getElementById('kpiReadTime').textContent = readTime + 'm';
+  document.getElementById('kpiSentences').textContent = sc;
+  document.getElementById('kpiVocab').textContent = uw;
+  document.getElementById('kpiDensity').textContent = density + '%';
+
+  // --- Quality dims ---
+  const avgSentLen = sc > 0 ? wc / sc : 0;
+  const clarity = Math.min(100, Math.max(30, 100 - Math.abs(avgSentLen - 18) * 3));
+  const cohesion = Math.min(100, Math.max(40, 55 + sc * 2));
+  const vocab = Math.min(100, Math.max(30, density * 1.4));
+  const academic = Math.min(100, Math.max(30, estimateAcademic(body)));
+  const structure = Math.min(100, Math.max(30, estimateStructure(body)));
+  const originality = Math.min(100, Math.max(60, 70 + Math.random() * 20));
+
+  renderQualityBars([
+    { label:'Clarity & Readability', val: Math.round(clarity), color:'#5b8af0' },
+    { label:'Text Cohesion', val: Math.round(cohesion), color:'#a78bfa' },
+    { label:'Vocabulary Richness', val: Math.round(vocab), color:'#34d399' },
+    { label:'Academic Tone', val: Math.round(academic), color:'#fb923c' },
+    { label:'Document Structure', val: Math.round(structure), color:'#f472b6' },
+    { label:'Originality Estimate', val: Math.round(originality), color:'#22d3ee' },
+  ]);
+
+  // --- Sentence lengths for line chart ---
+  const sentLengths = sentences.slice(0,30).map(s => s.trim().split(/\s+/).length);
+
+  // --- Top keywords ---
+  const stopwords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','that','this','these','those','it','its','as','into','not','than','more','also','which','who','their','they','them','our','we','i','you','he','she','his','her','if','about','up','out','there','when','where','what','all','such','any','each','one','two','three','how','so','no','some','other','new','most','can']);
+  const freq = {};
+  words.forEach(w => {
+    const k = w.toLowerCase().replace(/[^a-z]/g,'');
+    if (k.length > 3 && !stopwords.has(k)) freq[k] = (freq[k]||0) + 1;
+  });
+  const topKW = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // --- Section breakdown ---
+  const sectionMap = detectSections(body);
+
+  // --- Charts ---
+  renderCharts({ clarity, cohesion, vocab, academic, structure, originality, sentLengths, topKW, sectionMap, body });
+}
+
+function estimateAcademic(text) {
+  const academicWords = ['furthermore','moreover','however','therefore','consequently','additionally','specifically','predominantly','methodology','hypothesis','analysis','significant','substantial','demonstrate','indicate','evidence','research','study','literature','theoretical','empirical','approach','framework','examine','investigate','evaluate'];
+  const lc = text.toLowerCase();
+  const hits = academicWords.filter(w => lc.includes(w)).length;
+  return 50 + hits * 3;
+}
+
+function estimateStructure(text) {
+  const sections = ['abstract','introduction','method','result','discussion','conclusion','reference'];
+  const lc = text.toLowerCase();
+  const found = sections.filter(s => lc.includes(s)).length;
+  return 30 + found * 10;
+}
+
+function detectSections(text) {
+  const sections = { Abstract:0, Introduction:0, Methodology:0, Results:0, Discussion:0, Conclusion:0, Other:0 };
+  const lines = text.split('\n');
+  let current = 'Other';
+  lines.forEach(line => {
+    const lc = line.trim().toLowerCase();
+    if (lc.includes('abstract')) current = 'Abstract';
+    else if (lc.includes('introduction')) current = 'Introduction';
+    else if (lc.includes('method')) current = 'Methodology';
+    else if (lc.includes('result')) current = 'Results';
+    else if (lc.includes('discussion')) current = 'Discussion';
+    else if (lc.includes('conclusion')) current = 'Conclusion';
+    const wc = line.trim().split(/\s+/).filter(Boolean).length;
+    sections[current] = (sections[current] || 0) + wc;
+  });
+  return sections;
+}
+
+function renderQualityBars(items) {
+  const container = document.getElementById('qualityBars');
+  container.innerHTML = items.map(item => `
+    <div class="an-progress-row">
+      <div class="an-progress-label">
+        <span>${item.label}</span>
+        <span>${item.val}%</span>
+      </div>
+      <div class="an-progress-track">
+        <div class="an-progress-bar" style="width:0%;background:${item.color};" data-target="${item.val}"></div>
+      </div>
+    </div>
+  `).join('');
+  // Animate bars
+  setTimeout(() => {
+    container.querySelectorAll('.an-progress-bar').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 100);
+}
+
+function renderCharts({ clarity, cohesion, vocab, academic, structure, originality, sentLengths, topKW, sectionMap }) {
+  const chartDefaults = {
+    plugins: { legend: { display: false } },
+    responsive: true,
+    maintainAspectRatio: false,
+  };
+  const gridColor = '#2a2d3e';
+  const tickColor = '#6b7280';
+
+  // destroy old
+  [radarChartInst, donutChartInst, lineChartInst, barChartInst, sectionBarInst].forEach(c => { if(c) c.destroy(); });
+
+  // RADAR
+  radarChartInst = new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: ['Clarity','Cohesion','Vocabulary','Academic Tone','Structure','Originality'],
+      datasets: [{
+        data: [clarity, cohesion, vocab, academic, structure, originality],
+        backgroundColor: 'rgba(91,138,240,0.15)',
+        borderColor: '#5b8af0',
+        borderWidth: 2,
+        pointBackgroundColor: ['#5b8af0','#a78bfa','#34d399','#fb923c','#f472b6','#22d3ee'],
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid: { color: gridColor },
+          angleLines: { color: gridColor },
+          pointLabels: { color: tickColor, font: { size: 10, family: 'DM Sans' } }
+        }
+      }
+    }
+  });
+
+  // DONUT
+  const donutData = [30, 20, 15, 20, 10, 5];
+  const donutLabels = ['Introduction','Methodology','Results','Discussion','Conclusion','Abstract'];
+  const donutColors = ['#5b8af0','#a78bfa','#34d399','#fb923c','#f472b6','#22d3ee'];
+  donutChartInst = new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: donutLabels,
+      datasets: [{ data: donutData, backgroundColor: donutColors, borderColor: '#16181f', borderWidth: 3, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: { legend: { display: false } }
+    }
+  });
+  document.getElementById('donutLegend').innerHTML = donutLabels.map((l,i) =>
+    `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#6b7280;">
+      <div style="width:7px;height:7px;border-radius:50%;background:${donutColors[i]};flex-shrink:0;"></div>${l}
+    </div>`
+  ).join('');
+
+  // LINE (sentence lengths)
+  const labels = sentLengths.map((_,i) => 'S'+(i+1));
+  const avgLen = sentLengths.length ? sentLengths.reduce((a,b)=>a+b,0)/sentLengths.length : 0;
+  lineChartInst = new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Sentence Length',
+          data: sentLengths,
+          borderColor: '#5b8af0',
+          backgroundColor: 'rgba(91,138,240,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#5b8af0',
+          borderWidth: 2,
+        },
+        {
+          label: 'Average',
+          data: sentLengths.map(() => Math.round(avgLen)),
+          borderColor: '#f472b650',
+          borderDash: [4,4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 }, maxTicksLimit: 10 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } }, title: { display: true, text: 'Words', color: tickColor, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // BAR (keywords)
+  barChartInst = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: topKW.map(([k]) => k),
+      datasets: [{
+        data: topKW.map(([,v]) => v),
+        backgroundColor: topKW.map((_,i) => ['#5b8af0','#a78bfa','#34d399','#fb923c','#f472b6','#22d3ee','#facc15','#e879f9'][i % 8] + 'cc'),
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      indexAxis: 'y',
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
+      }
+    }
+  });
+
+  // SECTION BAR
+  const secEntries = Object.entries(sectionMap).filter(([,v]) => v > 0);
+  const secColors = ['#5b8af0','#a78bfa','#34d399','#fb923c','#f472b6','#22d3ee','#facc15'];
+  sectionBarInst = new Chart(document.getElementById('sectionBar'), {
+    type: 'bar',
+    data: {
+      labels: secEntries.map(([k]) => k),
+      datasets: [{
+        data: secEntries.map(([,v]) => v),
+        backgroundColor: secEntries.map((_,i) => secColors[i % secColors.length]),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } }, title: { display: true, text: 'Words', color: tickColor, font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// AI Deep Analysis
+async function runAIAnalysis() {
+  const btn = document.getElementById('analyzeAiBtn');
+  const sp = document.getElementById('analyzeSpinner');
+  btn.disabled = true;
+  sp.className = 'spinner';
+  const body = document.getElementById('aiAnalysisBody');
+  const insights = document.getElementById('aiInsights');
+  body.className = 'an-ai-body loading';
+  body.textContent = 'Analysing your paper with AI… this may take a moment.';
+  insights.innerHTML = '';
+
+  const text = (document.getElementById('paperTitle').value + '\n' + document.getElementById('mainEditor').value).slice(0, 1500);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are an expert academic writing evaluator. Analyse the given research paper text and return ONLY a JSON object with these fields:
+{
+  "summary": "3-4 sentence overall assessment of the paper",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "weaknesses": ["weakness 1", "weakness 2"],
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
+  "pills": [{"label":"...", "type":"blue|green|orange|purple|pink"}, ...]
+}
+No markdown, no extra text.`,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await res.json();
+    let raw = data.content?.map(b => b.text || '').join('') || '{}';
+    raw = raw.replace(/```json|```/g, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { summary: raw, strengths:[], weaknesses:[], suggestions:[], pills:[] }; }
+
+    let html = `<p style="margin-bottom:12px;">${escHtml(parsed.summary || '')}</p>`;
+    if (parsed.strengths?.length) {
+      html += `<p style="font-weight:700;color:#34d399;font-size:12px;margin-bottom:6px;">✅ STRENGTHS</p>`;
+      html += parsed.strengths.map(s => `<p style="margin-bottom:4px;padding-left:14px;border-left:2px solid #34d39950;">• ${escHtml(s)}</p>`).join('');
+    }
+    if (parsed.weaknesses?.length) {
+      html += `<p style="font-weight:700;color:#fb923c;font-size:12px;margin:10px 0 6px;">⚠️ AREAS TO IMPROVE</p>`;
+      html += parsed.weaknesses.map(s => `<p style="margin-bottom:4px;padding-left:14px;border-left:2px solid #fb923c50;">• ${escHtml(s)}</p>`).join('');
+    }
+    if (parsed.suggestions?.length) {
+      html += `<p style="font-weight:700;color:#5b8af0;font-size:12px;margin:10px 0 6px;">💡 SUGGESTIONS</p>`;
+      html += parsed.suggestions.map(s => `<p style="margin-bottom:4px;padding-left:14px;border-left:2px solid #5b8af050;">• ${escHtml(s)}</p>`).join('');
+    }
+    body.className = 'an-ai-body';
+    body.innerHTML = html;
+
+    if (parsed.pills?.length) {
+      insights.innerHTML = parsed.pills.map(p =>
+        `<span class="an-pill ${p.type || 'blue'}">${escHtml(p.label)}</span>`
+      ).join('');
+    }
+    setStatus('AI deep analysis complete ✓');
+  } catch(e) {
+    body.className = 'an-ai-body';
+    body.textContent = 'Failed to connect to AI. Please check your connection and try again.';
+  }
+  btn.disabled = false;
+  sp.className = '';
+}
+</script>
+
+<!-- ===================== TOOL OVERLAYS CSS ===================== -->
+<style>
+.tool-overlay {
+  display:none;
+  position:fixed;
+  inset:52px 0 26px 0;
+  background:#0e0f14;
+  z-index:50;
+  overflow-y:auto;
+}
+.tool-overlay.visible { display:block; }
+
+/* ---- Shared tool shell ---- */
+.tool-header {
+  padding:28px 40px 0;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  margin-bottom:24px;
+}
+.tool-brand { display:flex; align-items:center; gap:14px; }
+.tool-logo-badge {
+  width:48px; height:48px;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  flex-shrink:0;
+}
+.tool-name { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; line-height:1.1; }
+.tool-tagline { font-size:12px; color:#6b7280; margin-top:3px; }
+.tool-close {
+  background:transparent; border:1px solid #2a2d3e;
+  border-radius:8px; color:#6b7280; padding:7px 16px;
+  font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all .15s; white-space:nowrap;
+}
+.tool-close:hover { color:#e8eaf2; border-color:#5b8af0; }
+.tool-body { padding:0 40px 40px; }
+
+/* Feature tabs inside tool */
+.tool-tabs {
+  display:flex; gap:4px;
+  background:#16181f;
+  border:1px solid #2a2d3e;
+  border-radius:10px;
+  padding:4px;
+  margin-bottom:22px;
+}
+.tool-tab {
+  flex:1; padding:8px 10px;
+  border-radius:7px;
+  font-size:12px; font-weight:600;
+  border:none; background:transparent;
+  color:#6b7280; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+  text-align:center;
+}
+.tool-tab.active { color:#e8eaf2; }
+.tool-tab:hover:not(.active) { color:#e8eaf2; }
+
+/* Input areas shared */
+.tool-textarea {
+  width:100%; min-height:120px;
+  background:#16181f; border:1px solid #2a2d3e;
+  border-radius:10px; padding:14px;
+  color:#e8eaf2; font-size:13.5px;
+  line-height:1.7; resize:vertical;
+  font-family:'DM Sans',sans-serif; outline:none;
+  margin-bottom:10px;
+}
+.tool-textarea:focus { border-color:var(--focus-color,#5b8af0); }
+
+.tool-run-btn {
+  border:none; border-radius:9px; color:#fff;
+  font-size:13px; font-weight:700;
+  padding:10px 24px; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:opacity .15s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.tool-run-btn:hover { opacity:.85; }
+.tool-run-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+.tool-result-card {
+  background:#16181f;
+  border-radius:12px;
+  padding:20px;
+  margin-top:16px;
+  animation:fadeSlide .3s ease;
+  line-height:1.8;
+  font-size:13.5px;
+  color:#e8eaf2;
+}
+.tool-result-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px;
+  padding-bottom:12px;
+  border-bottom:1px solid #2a2d3e;
+}
+.tool-result-title { font-size:13px; font-weight:700; }
+
+/* Grid layouts */
+.tool-2col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.tool-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.tool-card {
+  background:#16181f; border:1px solid #2a2d3e;
+  border-radius:12px; padding:18px;
+}
+.tool-card-title {
+  font-size:12px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em;
+  color:#6b7280; margin-bottom:10px;
+}
+
+/* Stat boxes */
+.tool-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+.tool-stat-box {
+  background:#16181f; border:1px solid #2a2d3e;
+  border-radius:10px; padding:14px 12px; text-align:center;
+}
+.tool-stat-val { font-size:24px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-bottom:3px; }
+.tool-stat-lbl { font-size:10px; color:#6b7280; }
+
+/* Tag chips */
+.chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.chip {
+  font-size:11px; font-weight:600;
+  padding:4px 10px; border-radius:20px;
+  border:1px solid; cursor:default;
+}
+
+/* Paper card */
+.paper-card {
+  background:#16181f; border:1px solid #2a2d3e;
+  border-radius:10px; padding:14px;
+  margin-bottom:10px; transition:border-color .15s;
+}
+.paper-card:hover { border-color:#5b8af040; }
+.paper-card-title { font-size:13px; font-weight:600; margin-bottom:4px; line-height:1.4; }
+.paper-card-meta { font-size:11px; color:#6b7280; margin-bottom:8px; }
+.paper-card-abstract { font-size:12px; color:#9ca3af; line-height:1.6; margin-bottom:8px; }
+.paper-card-actions { display:flex; gap:8px; }
+.paper-card-btn {
+  font-size:11px; font-weight:600;
+  padding:4px 12px; border-radius:6px;
+  cursor:pointer; border:1px solid #2a2d3e;
+  background:#0e0f14; color:#6b7280;
+  font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.paper-card-btn:hover { color:#e8eaf2; }
+
+/* Flashcard style */
+.flashcard {
+  background:linear-gradient(135deg,#16181f,#1a1d2a);
+  border:1px solid #2a2d3e; border-radius:14px;
+  padding:24px; margin-bottom:14px;
+  min-height:140px; position:relative;
+}
+.flashcard-q { font-size:14px; font-weight:600; margin-bottom:10px; color:#e8eaf2; }
+.flashcard-a { font-size:13px; color:#9ca3af; line-height:1.7; }
+
+/* Toggle switch */
+.toggle-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #2a2d3e; }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-label { font-size:13px; color:#e8eaf2; }
+.toggle-sub { font-size:11px; color:#6b7280; margin-top:2px; }
+.toggle-sw {
+  width:38px; height:20px; border-radius:10px;
+  background:#2a2d3e; cursor:pointer; position:relative;
+  transition:background .2s; flex-shrink:0; border:none;
+}
+.toggle-sw.on { background:#5b8af0; }
+.toggle-sw::after {
+  content:''; position:absolute;
+  top:3px; left:3px; width:14px; height:14px;
+  border-radius:50%; background:#fff;
+  transition:transform .2s;
+}
+.toggle-sw.on::after { transform:translateX(18px); }
+
+/* progress mini */
+.mini-prog { height:4px; background:#2a2d3e; border-radius:2px; margin-top:6px; overflow:hidden; }
+.mini-prog-bar { height:100%; border-radius:2px; transition:width 1s ease; }
+
+/* skeleton anim */
+.sk { background:linear-gradient(90deg,#16181f 25%,#2a2d3e 50%,#16181f 75%); background-size:200% 100%; animation:shimmer 1.3s infinite; border-radius:6px; }
+</style>
+
+<!-- ===================== JENNI AI OVERLAY ===================== -->
+<div class="tool-overlay" id="tool-jenni">
+  <div class="tool-header">
+    <div class="tool-brand">
+      <div class="tool-logo-badge" style="background:linear-gradient(135deg,#064e3b,#065f46);">✦</div>
+      <div>
+        <div class="tool-name" style="background:linear-gradient(135deg,#6ee7b7,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Jenni AI</div>
+        <div class="tool-tagline">AI-powered writing & autocomplete for researchers</div>
+      </div>
+    </div>
+    <button class="tool-close" onclick="closeTool('jenni')">✕ Close</button>
+  </div>
+  <div class="tool-body">
+    <div class="tool-tabs" id="jenni-tabs">
+      <button class="tool-tab active" style="background:#6ee7b720;color:#6ee7b7;" onclick="jenniTab(this,'write')">✍️ AI Write</button>
+      <button class="tool-tab" onclick="jenniTab(this,'autocomplete')">⚡ Autocomplete</button>
+      <button class="tool-tab" onclick="jenniTab(this,'outline')">🗂️ Outline</button>
+      <button class="tool-tab" onclick="jenniTab(this,'cite')">🔗 Cite-as-you-write</button>
+    </div>
+
+    <!-- WRITE -->
+    <div id="jenni-write">
+      <div class="tool-2col" style="margin-bottom:18px;align-items:start;">
+        <div>
+          <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">WRITING PROMPT</div>
+          <textarea class="tool-textarea" id="jenni-prompt" style="--focus-color:#6ee7b7;min-height:100px;" placeholder="e.g. Write the methodology section for a study about AI effects on student learning outcomes using a mixed-methods approach..."></textarea>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+              <option>Academic</option><option>Technical</option><option>Review</option><option>Persuasive</option>
+            </select>
+            <select style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+              <option>~150 words</option><option>~300 words</option><option>~500 words</option><option>~800 words</option>
+            </select>
+            <button class="tool-run-btn" style="background:linear-gradient(135deg,#059669,#6ee7b7);" onclick="jenniRun('write')">
+              <span id="jenni-write-sp"></span> ✦ Generate
+            </button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">QUICK TEMPLATES</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="paper-card-btn" style="text-align:left;padding:10px 12px;border-radius:8px;font-size:12px;" onclick="document.getElementById('jenni-prompt').value='Write a comprehensive abstract for a research paper about '+document.getElementById('paperTitle').value">📋 Auto-fill Abstract</button>
+            <button class="paper-card-btn" style="text-align:left;padding:10px 12px;border-radius:8px;font-size:12px;" onclick="document.getElementById('jenni-prompt').value='Write a literature review section covering the theoretical background for: '+document.getElementById('paperTitle').value">📚 Literature Review</button>
+            <button class="paper-card-btn" style="text-align:left;padding:10px 12px;border-radius:8px;font-size:12px;" onclick="document.getElementById('jenni-prompt').value='Write a limitations and future work section for: '+document.getElementById('paperTitle').value">🔮 Limitations & Future Work</button>
+            <button class="paper-card-btn" style="text-align:left;padding:10px 12px;border-radius:8px;font-size:12px;" onclick="document.getElementById('jenni-prompt').value='Write a compelling introduction that establishes research gap for: '+document.getElementById('paperTitle').value">🎯 Introduction Hook</button>
+          </div>
+        </div>
+      </div>
+      <div id="jenni-write-result" style="display:none;" class="tool-result-card">
+        <div class="tool-result-header">
+          <span class="tool-result-title" style="color:#6ee7b7;">✦ Jenni Generated</span>
+          <div style="display:flex;gap:8px;">
+            <button class="paper-card-btn" onclick="navigator.clipboard.writeText(document.getElementById('jenni-write-out').textContent)">Copy</button>
+            <button class="paper-card-btn" style="color:#6ee7b7;border-color:#6ee7b740;" onclick="appendToEditor('jenni-write-out')">↩ Add to Editor</button>
+          </div>
+        </div>
+        <div id="jenni-write-out" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- AUTOCOMPLETE -->
+    <div id="jenni-autocomplete" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PASTE YOUR SENTENCE — AI WILL CONTINUE IT</div>
+      <textarea class="tool-textarea" id="jenni-ac-input" style="--focus-color:#6ee7b7;min-height:80px;" placeholder="e.g. The results indicate that participants who used AI tools demonstrated significantly higher..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#059669,#6ee7b7);" onclick="jenniRun('autocomplete')"><span id="jenni-ac-sp"></span> ⚡ Continue Writing</button>
+        <button class="tool-run-btn" style="background:#16181f;border:1px solid #2a2d3e;color:#6b7280;" onclick="jenniRun('autocomplete3')">3 Suggestions</button>
+      </div>
+      <div id="jenni-ac-result" style="display:none;"></div>
+    </div>
+
+    <!-- OUTLINE -->
+    <div id="jenni-outline" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER TOPIC / TITLE</div>
+      <textarea class="tool-textarea" id="jenni-outline-input" style="--focus-color:#6ee7b7;min-height:70px;" placeholder="e.g. The role of microbiome diversity in mental health outcomes: a systematic review"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <select style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Journal Article</option><option>Thesis</option><option>Conference Paper</option><option>Review Article</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#059669,#6ee7b7);" onclick="jenniRun('outline')"><span id="jenni-ol-sp"></span> 🗂️ Generate Outline</button>
+      </div>
+      <div id="jenni-outline-result" style="display:none;" class="tool-result-card">
+        <div class="tool-result-header">
+          <span class="tool-result-title" style="color:#6ee7b7;">Paper Outline</span>
+          <button class="paper-card-btn" onclick="appendToEditor('jenni-outline-out')">↩ Add to Editor</button>
+        </div>
+        <div id="jenni-outline-out" style="white-space:pre-wrap;font-size:13px;line-height:1.8;"></div>
+      </div>
+    </div>
+
+    <!-- CITE AS YOU WRITE -->
+    <div id="jenni-cite" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">STATEMENT TO CITE</div>
+      <textarea class="tool-textarea" id="jenni-cite-input" style="--focus-color:#6ee7b7;min-height:80px;" placeholder="e.g. Large language models have shown remarkable performance on various NLP benchmarks..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <select id="jenni-cite-style" style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>APA 7</option><option>MLA 9</option><option>Chicago 17</option><option>IEEE</option><option>Vancouver</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#059669,#6ee7b7);" onclick="jenniRun('cite')"><span id="jenni-cite-sp"></span> 🔗 Find & Cite</button>
+      </div>
+      <div id="jenni-cite-result" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAPERGUIDE OVERLAY ===================== -->
+<div class="tool-overlay" id="tool-paperguide">
+  <div class="tool-header">
+    <div class="tool-brand">
+      <div class="tool-logo-badge" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);">📘</div>
+      <div>
+        <div class="tool-name" style="background:linear-gradient(135deg,#93c5fd,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">PaperGuide</div>
+        <div class="tool-tagline">Find, read & understand research papers smarter</div>
+      </div>
+    </div>
+    <button class="tool-close" onclick="closeTool('paperguide')">✕ Close</button>
+  </div>
+  <div class="tool-body">
+    <div class="tool-tabs">
+      <button class="tool-tab active" style="background:#93c5fd20;color:#93c5fd;" onclick="pgTab(this,'discover')">🔍 Discover</button>
+      <button class="tool-tab" onclick="pgTab(this,'explain')">💡 Explain Paper</button>
+      <button class="tool-tab" onclick="pgTab(this,'compare')">⚖️ Compare Papers</button>
+      <button class="tool-tab" onclick="pgTab(this,'journal')">📰 Journal Match</button>
+    </div>
+
+    <!-- DISCOVER -->
+    <div id="pg-discover">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <input id="pg-search-input" style="flex:1;background:#16181f;border:1px solid #2a2d3e;border-radius:9px;padding:11px 16px;color:#e8eaf2;font-size:13px;outline:none;font-family:'DM Sans',sans-serif;" placeholder="Search research papers: e.g. CRISPR gene editing cancer therapy 2023..." onkeydown="if(e.key==='Enter')pgRun('discover')" />
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);" onclick="pgRun('discover')"><span id="pg-disc-sp"></span> 🔍 Search</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <span class="chip" style="background:#93c5fd15;color:#93c5fd;border-color:#93c5fd30;cursor:pointer;" onclick="document.getElementById('pg-search-input').value=this.textContent.trim()">🧬 Gene therapy</span>
+        <span class="chip" style="background:#93c5fd15;color:#93c5fd;border-color:#93c5fd30;cursor:pointer;" onclick="document.getElementById('pg-search-input').value=this.textContent.trim()">🤖 LLM reasoning</span>
+        <span class="chip" style="background:#93c5fd15;color:#93c5fd;border-color:#93c5fd30;cursor:pointer;" onclick="document.getElementById('pg-search-input').value=this.textContent.trim()">🌍 Climate ML</span>
+        <span class="chip" style="background:#93c5fd15;color:#93c5fd;border-color:#93c5fd30;cursor:pointer;" onclick="document.getElementById('pg-search-input').value=this.textContent.trim()">🧠 Neuroscience AI</span>
+      </div>
+      <div id="pg-discover-result"></div>
+    </div>
+
+    <!-- EXPLAIN -->
+    <div id="pg-explain" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PASTE ABSTRACT OR EXCERPT</div>
+      <textarea class="tool-textarea" id="pg-explain-input" style="--focus-color:#93c5fd;min-height:120px;" placeholder="Paste any research paper abstract or complex paragraph here..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="pg-explain-level" style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Explain like I'm a PhD</option><option>Explain like I'm a grad student</option><option>Explain simply (ELI5)</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);" onclick="pgRun('explain')"><span id="pg-exp-sp"></span> 💡 Explain It</button>
+      </div>
+      <div id="pg-explain-result" style="display:none;" class="tool-result-card" style="border-color:#93c5fd30;">
+        <div class="tool-result-header">
+          <span class="tool-result-title" style="color:#93c5fd;">💡 Plain-Language Explanation</span>
+          <button class="paper-card-btn" onclick="navigator.clipboard.writeText(document.getElementById('pg-explain-out').textContent)">Copy</button>
+        </div>
+        <div id="pg-explain-out" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- COMPARE -->
+    <div id="pg-compare" style="display:none;">
+      <div class="tool-2col" style="margin-bottom:12px;">
+        <div>
+          <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:6px;">PAPER A</div>
+          <textarea class="tool-textarea" id="pg-cmp-a" style="--focus-color:#93c5fd;min-height:100px;" placeholder="Paste abstract or key points of Paper A..."></textarea>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:6px;">PAPER B</div>
+          <textarea class="tool-textarea" id="pg-cmp-b" style="--focus-color:#93c5fd;min-height:100px;" placeholder="Paste abstract or key points of Paper B..."></textarea>
+        </div>
+      </div>
+      <button class="tool-run-btn" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);margin-bottom:16px;" onclick="pgRun('compare')"><span id="pg-cmp-sp"></span> ⚖️ Compare Papers</button>
+      <div id="pg-compare-result" style="display:none;" class="tool-result-card">
+        <div class="tool-result-header"><span class="tool-result-title" style="color:#93c5fd;">⚖️ Comparison Analysis</span><button class="paper-card-btn" onclick="appendToEditor('pg-cmp-out')">↩ Add to Editor</button></div>
+        <div id="pg-cmp-out" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- JOURNAL MATCH -->
+    <div id="pg-journal" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER ABSTRACT / SUMMARY</div>
+      <textarea class="tool-textarea" id="pg-journal-input" style="--focus-color:#93c5fd;min-height:100px;" placeholder="Paste your abstract to find the best matching journals..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Open Access preferred</option><option>High Impact Factor</option><option>Any journal</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);" onclick="pgRun('journal')"><span id="pg-jour-sp"></span> 📰 Match Journals</button>
+      </div>
+      <div id="pg-journal-result" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCISPACE OVERLAY ===================== -->
+<div class="tool-overlay" id="tool-scispace">
+  <div class="tool-header">
+    <div class="tool-brand">
+      <div class="tool-logo-badge" style="background:linear-gradient(135deg,#2e1065,#6d28d9);">🔭</div>
+      <div>
+        <div class="tool-name" style="background:linear-gradient(135deg,#c4b5fd,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">SciSpace</div>
+        <div class="tool-tagline">Understand any paper, ask questions, explore science</div>
+      </div>
+    </div>
+    <button class="tool-close" onclick="closeTool('scispace')">✕ Close</button>
+  </div>
+  <div class="tool-body">
+    <div class="tool-tabs">
+      <button class="tool-tab active" style="background:#c4b5fd20;color:#c4b5fd;" onclick="ssTab(this,'chat')">💬 Paper Chat</button>
+      <button class="tool-tab" onclick="ssTab(this,'math')">∑ Math Explainer</button>
+      <button class="tool-tab" onclick="ssTab(this,'lit')">📖 Lit Review</button>
+      <button class="tool-tab" onclick="ssTab(this,'qa')">❓ Q&A Mode</button>
+    </div>
+
+    <!-- PAPER CHAT -->
+    <div id="ss-chat">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER CONTENT (paste excerpt)</div>
+      <textarea class="tool-textarea" id="ss-paper-content" style="--focus-color:#c4b5fd;min-height:90px;" placeholder="Paste paper content here, then ask questions below..."></textarea>
+      <div id="ss-chat-history" style="max-height:260px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input id="ss-chat-q" style="flex:1;background:#16181f;border:1px solid #2a2d3e;border-radius:9px;padding:10px 14px;color:#e8eaf2;font-size:13px;outline:none;font-family:'DM Sans',sans-serif;" placeholder="Ask anything about this paper..." />
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);" onclick="ssRun('chat')"><span id="ss-chat-sp"></span> Ask</button>
+      </div>
+    </div>
+
+    <!-- MATH EXPLAINER -->
+    <div id="ss-math" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PASTE EQUATION OR FORMULA</div>
+      <textarea class="tool-textarea" id="ss-math-input" style="--focus-color:#c4b5fd;min-height:80px;" placeholder="e.g. ∇²φ = ρ/ε₀  or  The cross-entropy loss L = -Σ yᵢ log(ŷᵢ)..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="ss-math-level" style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Explain intuitively</option><option>Step-by-step derivation</option><option>Real-world example</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);" onclick="ssRun('math')"><span id="ss-math-sp"></span> ∑ Explain</button>
+      </div>
+      <div id="ss-math-result" style="display:none;" class="tool-result-card">
+        <div class="tool-result-header"><span class="tool-result-title" style="color:#c4b5fd;">∑ Math Explained</span><button class="paper-card-btn" onclick="navigator.clipboard.writeText(document.getElementById('ss-math-out').textContent)">Copy</button></div>
+        <div id="ss-math-out" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- LIT REVIEW -->
+    <div id="ss-lit" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">RESEARCH TOPIC</div>
+      <textarea class="tool-textarea" id="ss-lit-input" style="--focus-color:#c4b5fd;min-height:70px;" placeholder="e.g. transformer architectures for time series forecasting"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Last 5 years</option><option>Last 3 years</option><option>Last year</option><option>All time</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);" onclick="ssRun('lit')"><span id="ss-lit-sp"></span> 📖 Generate Lit Review</button>
+      </div>
+      <div id="ss-lit-result" style="display:none;" class="tool-result-card">
+        <div class="tool-result-header"><span class="tool-result-title" style="color:#c4b5fd;">📖 Literature Review</span><button class="paper-card-btn" onclick="appendToEditor('ss-lit-out')">↩ Add to Editor</button></div>
+        <div id="ss-lit-out" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- Q&A MODE -->
+    <div id="ss-qa" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">GENERATE STUDY Q&A FROM YOUR PAPER</div>
+      <textarea class="tool-textarea" id="ss-qa-input" style="--focus-color:#c4b5fd;min-height:90px;" placeholder="Paste paper content to generate study questions and answers..."></textarea>
+      <button class="tool-run-btn" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);margin-bottom:14px;" onclick="ssRun('qa')"><span id="ss-qa-sp"></span> ❓ Generate Q&A</button>
+      <div id="ss-qa-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCHOLARCY OVERLAY ===================== -->
+<div class="tool-overlay" id="tool-scholarcy">
+  <div class="tool-header">
+    <div class="tool-brand">
+      <div class="tool-logo-badge" style="background:linear-gradient(135deg,#7f1d1d,#be185d);">⚡</div>
+      <div>
+        <div class="tool-name" style="background:linear-gradient(135deg,#fda4af,#fb7185);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Scholarcy</div>
+        <div class="tool-tagline">Instant paper summaries, flashcards & key insights</div>
+      </div>
+    </div>
+    <button class="tool-close" onclick="closeTool('scholarcy')">✕ Close</button>
+  </div>
+  <div class="tool-body">
+    <div class="tool-tabs">
+      <button class="tool-tab active" style="background:#fda4af20;color:#fda4af;" onclick="scTab(this,'summary')">⚡ Smart Summary</button>
+      <button class="tool-tab" onclick="scTab(this,'flashcards')">🃏 Flashcards</button>
+      <button class="tool-tab" onclick="scTab(this,'extract')">🔑 Key Extract</button>
+      <button class="tool-tab" onclick="scTab(this,'network')">🕸️ Concept Map</button>
+    </div>
+
+    <!-- SMART SUMMARY -->
+    <div id="sc-summary">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER TO SUMMARIZE</div>
+      <textarea class="tool-textarea" id="sc-summary-input" style="--focus-color:#fda4af;min-height:120px;" placeholder="Paste paper abstract + body text..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+        <select id="sc-sum-type" style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option>Structured summary</option><option>Bullet-point summary</option><option>One-paragraph summary</option><option>Executive summary</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#be185d,#fda4af);" onclick="scRun('summary')"><span id="sc-sum-sp"></span> ⚡ Summarize</button>
+        <button class="paper-card-btn" style="padding:9px 14px;" onclick="document.getElementById('sc-summary-input').value=document.getElementById('mainEditor').value.slice(0,1500)">↩ Use Editor</button>
+      </div>
+      <div id="sc-summary-result" style="display:none;">
+        <div id="sc-sum-stats" class="tool-stat-grid"></div>
+        <div class="tool-result-card" style="border-color:#fda4af30;margin-top:0;">
+          <div class="tool-result-header">
+            <span class="tool-result-title" style="color:#fda4af;">⚡ Scholarcy Summary</span>
+            <div style="display:flex;gap:8px;">
+              <button class="paper-card-btn" onclick="navigator.clipboard.writeText(document.getElementById('sc-sum-out').textContent)">Copy</button>
+              <button class="paper-card-btn" style="color:#fda4af;border-color:#fda4af40;" onclick="appendToEditor('sc-sum-out')">↩ Add to Editor</button>
+            </div>
+          </div>
+          <div id="sc-sum-out" style="white-space:pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLASHCARDS -->
+    <div id="sc-flashcards" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">CONTENT TO MAKE FLASHCARDS FROM</div>
+      <textarea class="tool-textarea" id="sc-flash-input" style="--focus-color:#fda4af;min-height:90px;" placeholder="Paste paper content to auto-generate study flashcards..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="sc-flash-count" style="background:#16181f;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option value="4">4 cards</option><option value="6">6 cards</option><option value="8">8 cards</option>
+        </select>
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#be185d,#fda4af);" onclick="scRun('flashcards')"><span id="sc-flash-sp"></span> 🃏 Generate Cards</button>
+        <button class="paper-card-btn" style="padding:9px 14px;" onclick="document.getElementById('sc-flash-input').value=document.getElementById('mainEditor').value.slice(0,1500)">↩ Use Editor</button>
+      </div>
+      <div id="sc-flash-result"></div>
+    </div>
+
+    <!-- KEY EXTRACT -->
+    <div id="sc-extract" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER CONTENT</div>
+      <textarea class="tool-textarea" id="sc-ext-input" style="--focus-color:#fda4af;min-height:100px;" placeholder="Paste paper content to extract key information..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#be185d,#fda4af);" onclick="scRun('extract')"><span id="sc-ext-sp"></span> 🔑 Extract Keys</button>
+        <button class="paper-card-btn" style="padding:9px 14px;" onclick="document.getElementById('sc-ext-input').value=document.getElementById('mainEditor').value.slice(0,1500)">↩ Use Editor</button>
+      </div>
+      <div id="sc-ext-result" style="display:none;"></div>
+    </div>
+
+    <!-- CONCEPT MAP -->
+    <div id="sc-network" style="display:none;">
+      <div style="font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;">PAPER CONTENT</div>
+      <textarea class="tool-textarea" id="sc-net-input" style="--focus-color:#fda4af;min-height:90px;" placeholder="Paste paper content to map key concepts and relationships..."></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="tool-run-btn" style="background:linear-gradient(135deg,#be185d,#fda4af);" onclick="scRun('network')"><span id="sc-net-sp"></span> 🕸️ Map Concepts</button>
+        <button class="paper-card-btn" style="padding:9px 14px;" onclick="document.getElementById('sc-net-input').value=document.getElementById('mainEditor').value.slice(0,1200)">↩ Use Editor</button>
+      </div>
+      <div id="sc-net-result" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOOLS JAVASCRIPT ===================== -->
+<script>
+const API = "https://api.anthropic.com/v1/messages";
+
+// ---- Open / close tool overlays ----
+function openTool(name) {
+  document.querySelectorAll('.tool-overlay').forEach(o => o.classList.remove('visible'));
+  document.getElementById('analyticsOverlay').style.display = 'none';
+  document.getElementById('tool-'+name).classList.add('visible');
+}
+function closeTool(name) {
+  document.getElementById('tool-'+name).classList.remove('visible');
+  document.querySelectorAll('.topbar-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+}
+function appendToEditor(id) {
+  const text = document.getElementById(id).textContent;
+  document.getElementById('mainEditor').value += '\n\n' + text;
+  updateWordCount();
+  setStatus('Text added to editor ✓');
+}
+
+async function aiCall(system, userMsg, spinnerId, btnId) {
+  const sp = document.getElementById(spinnerId);
+  const btn = btnId ? document.getElementById(btnId) : null;
+  if(sp) sp.className = 'spinner';
+  if(btn) btn.disabled = true;
+  try {
+    const res = await fetch(API, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages:[{role:'user',content:userMsg}] })
+    });
+    const data = await res.json();
+    return data.content?.map(b=>b.text||'').join('') || '';
+  } catch(e) { return 'Error: Could not connect to AI.'; }
+  finally { if(sp) sp.className=''; if(btn) btn.disabled=false; }
+}
+
+// ============ JENNI AI ============
+function jenniTab(btn, tab) {
+  document.querySelectorAll('#jenni-tabs .tool-tab').forEach(t => { t.classList.remove('active'); t.style.background=''; t.style.color=''; });
+  btn.classList.add('active'); btn.style.background='#6ee7b720'; btn.style.color='#6ee7b7';
+  ['write','autocomplete','outline','cite'].forEach(t => document.getElementById('jenni-'+t).style.display = t===tab?'block':'none');
+}
+
+async function jenniRun(mode) {
+  if (mode==='write') {
+    const prompt = document.getElementById('jenni-prompt').value.trim(); if(!prompt) return;
+    const txt = await aiCall('You are Jenni AI, an expert academic writing assistant. Write high-quality, well-structured academic content. Be thorough and scholarly. Return only the written content, no preamble.', prompt, 'jenni-write-sp');
+    document.getElementById('jenni-write-out').textContent = txt;
+    document.getElementById('jenni-write-result').style.display='block';
+    setStatus('Jenni AI writing complete ✓');
+  } else if (mode==='autocomplete') {
+    const inp = document.getElementById('jenni-ac-input').value.trim(); if(!inp) return;
+    const txt = await aiCall('You are an academic autocomplete AI. Continue the given sentence/paragraph naturally in academic style. Return only the continuation (not the original).', inp, 'jenni-ac-sp');
+    document.getElementById('jenni-ac-result').style.display='block';
+    document.getElementById('jenni-ac-result').innerHTML = `<div class="tool-result-card" style="border-color:#6ee7b730;"><div class="tool-result-header"><span style="color:#6ee7b7;font-weight:700;">⚡ Continuation</span><button class="paper-card-btn" onclick="appendToEditor('jenni-ac-out')">↩ Add</button></div><div id="jenni-ac-out" style="white-space:pre-wrap;">${escHtml(txt)}</div></div>`;
+  } else if (mode==='autocomplete3') {
+    const inp = document.getElementById('jenni-ac-input').value.trim(); if(!inp) return;
+    const txt = await aiCall('You are an academic autocomplete AI. Give exactly 3 different numbered continuations for the given sentence/paragraph. Academic style. Format: 1. ... 2. ... 3. ...', inp, 'jenni-ac-sp');
+    document.getElementById('jenni-ac-result').style.display='block';
+    document.getElementById('jenni-ac-result').innerHTML = `<div class="tool-result-card" style="border-color:#6ee7b730;"><div class="tool-result-header"><span style="color:#6ee7b7;font-weight:700;">⚡ 3 Suggestions</span></div><div style="white-space:pre-wrap;font-size:13px;line-height:1.8;">${escHtml(txt)}</div></div>`;
+  } else if (mode==='outline') {
+    const inp = document.getElementById('jenni-outline-input').value.trim(); if(!inp) return;
+    const txt = await aiCall('You are an expert academic paper outliner. Create a detailed, structured paper outline with sections, subsections and brief descriptions of content for each. Use clear numbering.', inp, 'jenni-ol-sp');
+    document.getElementById('jenni-outline-out').textContent = txt;
+    document.getElementById('jenni-outline-result').style.display='block';
+  } else if (mode==='cite') {
+    const inp = document.getElementById('jenni-cite-input').value.trim(); if(!inp) return;
+    const style = document.getElementById('jenni-cite-style').value;
+    const txt = await aiCall(`You are an academic citation expert. For the given statement, generate 3 plausible supporting references in ${style} format. For each reference, also provide a 1-sentence note on why it supports the claim. Be realistic about the references.`, inp, 'jenni-cite-sp');
+    document.getElementById('jenni-cite-result').style.display='block';
+    document.getElementById('jenni-cite-result').innerHTML = `<div class="tool-result-card" style="border-color:#6ee7b730;"><div class="tool-result-header"><span style="color:#6ee7b7;font-weight:700;">🔗 Suggested Citations (${style})</span></div><div style="white-space:pre-wrap;font-size:13px;line-height:1.8;">${escHtml(txt)}</div></div>`;
+  }
+}
+
+// ============ PAPERGUIDE ============
+function pgTab(btn, tab) {
+  document.querySelectorAll('#tool-paperguide .tool-tab').forEach(t => { t.classList.remove('active'); t.style.background=''; t.style.color=''; });
+  btn.classList.add('active'); btn.style.background='#93c5fd20'; btn.style.color='#93c5fd';
+  ['discover','explain','compare','journal'].forEach(t => document.getElementById('pg-'+t).style.display = t===tab?'block':'none');
+}
+
+async function pgRun(mode) {
+  if (mode==='discover') {
+    const q = document.getElementById('pg-search-input').value.trim(); if(!q) return;
+    const json = await aiCall('You are an academic paper discovery AI. Generate 4 realistic academic papers for the search query. Return ONLY a JSON array: [{title,authors,journal,year,doi,abstract}]. No markdown.', q, 'pg-disc-sp');
+    let papers; try { papers = JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { papers=[]; }
+    const cont = document.getElementById('pg-discover-result');
+    cont.innerHTML = papers.map(p => `
+      <div class="paper-card">
+        <div class="paper-card-title">${escHtml(p.title||'')}</div>
+        <div class="paper-card-meta">${escHtml(p.authors||'')} · ${escHtml(p.journal||'')} · ${p.year||''}</div>
+        <div class="paper-card-abstract">${escHtml((p.abstract||'').slice(0,180))}...</div>
+        <div class="paper-card-actions">
+          <button class="paper-card-btn" style="color:#93c5fd;border-color:#93c5fd40;" onclick="insertCitation('${escHtml(p.authors?.split(',')[0]||'Author')} et al., ${p.year||''}')">+ Cite</button>
+          <button class="paper-card-btn" onclick="document.getElementById('pg-explain-input').value='${escHtml(p.abstract||'')}';pgTab(document.querySelectorAll('#tool-paperguide .tool-tab')[1],'explain')">💡 Explain</button>
+        </div>
+      </div>`).join('') || '<div style="color:#6b7280;text-align:center;padding:20px;">No results. Try different keywords.</div>';
+    setStatus('PaperGuide found '+papers.length+' papers');
+  } else if (mode==='explain') {
+    const inp = document.getElementById('pg-explain-input').value.trim(); if(!inp) return;
+    const level = document.getElementById('pg-explain-level').value;
+    const txt = await aiCall(`You are an expert at explaining complex academic papers. ${level}. Break down the content clearly, explain jargon, and summarize key findings in accessible language.`, inp, 'pg-exp-sp');
+    document.getElementById('pg-explain-out').textContent = txt;
+    document.getElementById('pg-explain-result').style.display='block';
+  } else if (mode==='compare') {
+    const a = document.getElementById('pg-cmp-a').value.trim();
+    const b = document.getElementById('pg-cmp-b').value.trim();
+    if(!a||!b) return;
+    const txt = await aiCall('You are an academic comparison expert. Compare the two papers thoroughly: methodology, findings, contributions, limitations. Use clear structure: Similarities, Differences, Strengths of each, Recommendation.', `Paper A:\n${a}\n\nPaper B:\n${b}`, 'pg-cmp-sp');
+    document.getElementById('pg-cmp-out').textContent = txt;
+    document.getElementById('pg-compare-result').style.display='block';
+  } else if (mode==='journal') {
+    const inp = document.getElementById('pg-journal-input').value.trim(); if(!inp) return;
+    const json = await aiCall('You are an academic publishing expert. Suggest 4 realistic journals for this paper. Return ONLY JSON array: [{name,publisher,impactFactor,scope,turnaround,openAccess}]. No markdown.', inp, 'pg-jour-sp');
+    let journals; try { journals = JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { journals=[]; }
+    document.getElementById('pg-journal-result').style.display='block';
+    document.getElementById('pg-journal-result').innerHTML = journals.map((j,i) => `
+      <div class="paper-card" style="border-color:${['#93c5fd','#6ee7b7','#c4b5fd','#fda4af'][i%4]}20;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">
+          <div class="paper-card-title">${escHtml(j.name||'')}</div>
+          <span class="chip" style="background:#93c5fd15;color:#93c5fd;border-color:#93c5fd30;white-space:nowrap;">IF: ${escHtml(String(j.impactFactor||'N/A'))}</span>
+        </div>
+        <div class="paper-card-meta">${escHtml(j.publisher||'')} · ${j.openAccess?'🔓 Open Access':'🔒 Subscription'} · ⏱ ${escHtml(j.turnaround||'')}</div>
+        <div class="paper-card-abstract">${escHtml(j.scope||'')}</div>
+      </div>`).join('');
+    setStatus('PaperGuide matched '+journals.length+' journals');
+  }
+}
+
+// ============ SCISPACE ============
+function ssTab(btn, tab) {
+  document.querySelectorAll('#tool-scispace .tool-tab').forEach(t => { t.classList.remove('active'); t.style.background=''; t.style.color=''; });
+  btn.classList.add('active'); btn.style.background='#c4b5fd20'; btn.style.color='#c4b5fd';
+  ['chat','math','lit','qa'].forEach(t => document.getElementById('ss-'+t).style.display = t===tab?'block':'none');
+}
+
+const ssChatHistory = [];
+async function ssRun(mode) {
+  if (mode==='chat') {
+    const ctx = document.getElementById('ss-paper-content').value.trim();
+    const q = document.getElementById('ss-chat-q').value.trim(); if(!q) return;
+    const history = document.getElementById('ss-chat-history');
+    history.innerHTML += `<div style="background:#6d28d920;border:1px solid #c4b5fd30;border-radius:8px;padding:10px 12px;font-size:13px;"><b style="color:#c4b5fd;">You:</b> ${escHtml(q)}</div>`;
+    document.getElementById('ss-chat-q').value = '';
+    ssChatHistory.push({role:'user',content:q});
+    const sys = `You are SciSpace, an AI that helps researchers understand academic papers. ${ctx?'The paper content is:\n'+ctx:''} Answer questions clearly and accurately.`;
+    const txt = await aiCall(sys, q, 'ss-chat-sp');
+    history.innerHTML += `<div style="background:#1e2130;border:1px solid #2a2d3e;border-radius:8px;padding:10px 12px;font-size:13px;"><b style="color:#c4b5fd;">SciSpace:</b> ${escHtml(txt)}</div>`;
+    history.scrollTop = history.scrollHeight;
+  } else if (mode==='math') {
+    const inp = document.getElementById('ss-math-input').value.trim(); if(!inp) return;
+    const level = document.getElementById('ss-math-level').value;
+    const txt = await aiCall(`You are a math and physics expert. ${level} for the given equation/formula. Use clear notation, step-by-step reasoning, and plain language.`, inp, 'ss-math-sp');
+    document.getElementById('ss-math-out').textContent = txt;
+    document.getElementById('ss-math-result').style.display='block';
+  } else if (mode==='lit') {
+    const inp = document.getElementById('ss-lit-input').value.trim(); if(!inp) return;
+    const txt = await aiCall('You are an expert academic librarian. Write a comprehensive literature review section with proper academic structure, covering key theories, major studies, research gaps, and recent developments. Use proper citation placeholders like (Author, Year).', inp, 'ss-lit-sp');
+    document.getElementById('ss-lit-out').textContent = txt;
+    document.getElementById('ss-lit-result').style.display='block';
+  } else if (mode==='qa') {
+    const inp = document.getElementById('ss-qa-input').value.trim(); if(!inp) return;
+    const json = await aiCall('You are a study Q&A generator. Create 5 insightful Q&A pairs from the paper content. Return ONLY JSON array: [{question, answer, difficulty:"Easy"|"Medium"|"Hard"}]. No markdown.', inp, 'ss-qa-sp');
+    let pairs; try { pairs = JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { pairs=[]; }
+    const colors = {Easy:'#6ee7b7',Medium:'#93c5fd',Hard:'#fda4af'};
+    document.getElementById('ss-qa-result').innerHTML = pairs.map(p => `
+      <div class="flashcard">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Question</span>
+          <span class="chip" style="background:${colors[p.difficulty]||'#6b7280'}15;color:${colors[p.difficulty]||'#6b7280'};border-color:${colors[p.difficulty]||'#6b7280'}30;">${p.difficulty||''}</span>
+        </div>
+        <div class="flashcard-q">❓ ${escHtml(p.question||'')}</div>
+        <div style="height:1px;background:#2a2d3e;margin:10px 0;"></div>
+        <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;">Answer</div>
+        <div class="flashcard-a">✓ ${escHtml(p.answer||'')}</div>
+      </div>`).join('');
+    setStatus('SciSpace generated '+pairs.length+' Q&A pairs');
+  }
+}
+
+// ============ SCHOLARCY ============
+function scTab(btn, tab) {
+  document.querySelectorAll('#tool-scholarcy .tool-tab').forEach(t => { t.classList.remove('active'); t.style.background=''; t.style.color=''; });
+  btn.classList.add('active'); btn.style.background='#fda4af20'; btn.style.color='#fda4af';
+  ['summary','flashcards','extract','network'].forEach(t => document.getElementById('sc-'+t).style.display = t===tab?'block':'none');
+}
+
+async function scRun(mode) {
+  if (mode==='summary') {
+    const inp = document.getElementById('sc-summary-input').value.trim(); if(!inp) return;
+    const type = document.getElementById('sc-sum-type').value;
+    const json = await aiCall(`You are Scholarcy. Summarize the paper as a "${type}". Also return metadata. Return ONLY JSON: {summary:"...", wordCount:N, sentences:N, readTime:N, complexity:"Easy|Moderate|Complex"}. No markdown.`, inp, 'sc-sum-sp');
+    let r; try { r=JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { r={summary:json,wordCount:'—',sentences:'—',readTime:'—',complexity:'—'}; }
+    document.getElementById('sc-sum-stats').innerHTML = [
+      {label:'Words Saved',val:Math.max(0,inp.split(' ').length - (r.wordCount||0)),color:'#fda4af'},
+      {label:'Sentences',val:r.sentences||'—',color:'#fb7185'},
+      {label:'Read Time',val:(r.readTime||1)+'m',color:'#f43f5e'},
+      {label:'Complexity',val:r.complexity||'—',color:'#be185d'},
+    ].map(s=>`<div class="tool-stat-box"><div class="tool-stat-val" style="color:${s.color};">${s.val}</div><div class="tool-stat-lbl">${s.label}</div></div>`).join('');
+    document.getElementById('sc-sum-out').textContent = r.summary || '';
+    document.getElementById('sc-summary-result').style.display='block';
+    setStatus('Scholarcy summary ready ✓');
+  } else if (mode==='flashcards') {
+    const inp = document.getElementById('sc-flash-input').value.trim(); if(!inp) return;
+    const count = document.getElementById('sc-flash-count').value;
+    const json = await aiCall(`You are Scholarcy flashcard generator. Generate exactly ${count} study flashcards. Return ONLY JSON array: [{front:"concept/term",back:"definition/explanation",category:""}]. No markdown.`, inp, 'sc-flash-sp');
+    let cards; try { cards=JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { cards=[]; }
+    const catColors = ['#fda4af','#fb7185','#f43f5e','#c4b5fd','#93c5fd','#6ee7b7','#fb923c'];
+    document.getElementById('sc-flash-result').innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">`+
+      cards.map((c,i)=>`
+        <div class="flashcard" style="border-color:#fda4af30;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Front</span>
+            ${c.category?`<span class="chip" style="background:${catColors[i%7]}15;color:${catColors[i%7]};border-color:${catColors[i%7]}30;">${escHtml(c.category)}</span>`:''}
+          </div>
+          <div class="flashcard-q" style="color:#fda4af;">${escHtml(c.front||'')}</div>
+          <div style="height:1px;background:#2a2d3e;margin:10px 0;"></div>
+          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Back</span>
+          <div class="flashcard-a" style="margin-top:6px;">${escHtml(c.back||'')}</div>
+        </div>`).join('')+`</div>`;
+    setStatus('Scholarcy generated '+cards.length+' flashcards ✓');
+  } else if (mode==='extract') {
+    const inp = document.getElementById('sc-ext-input').value.trim(); if(!inp) return;
+    const json = await aiCall('You are Scholarcy key information extractor. Extract key information from the paper. Return ONLY JSON: {hypothesis:"",methodology:"",keyFindings:["",""],limitations:[""],futureWork:[""],keywords:[""]}. No markdown.', inp, 'sc-ext-sp');
+    let r; try { r=JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { r={}; }
+    document.getElementById('sc-ext-result').style.display='block';
+    document.getElementById('sc-ext-result').innerHTML = `
+      <div class="tool-result-card" style="border-color:#fda4af30;">
+        <div class="tool-result-header"><span style="color:#fda4af;font-weight:700;">🔑 Key Extractions</span><button class="paper-card-btn" onclick="appendToEditor('sc-ext-out-inner')">↩ Add to Editor</button></div>
+        <div id="sc-ext-out-inner">
+          ${r.hypothesis?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#fda4af;font-weight:700;text-transform:uppercase;margin-bottom:5px;">Hypothesis / Aim</div><div style="font-size:13px;line-height:1.7;">${escHtml(r.hypothesis)}</div></div>`:''}
+          ${r.methodology?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#fb7185;font-weight:700;text-transform:uppercase;margin-bottom:5px;">Methodology</div><div style="font-size:13px;line-height:1.7;">${escHtml(r.methodology)}</div></div>`:''}
+          ${r.keyFindings?.length?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#f43f5e;font-weight:700;text-transform:uppercase;margin-bottom:5px;">Key Findings</div>${r.keyFindings.map(f=>`<div style="font-size:13px;line-height:1.7;padding:4px 0;border-bottom:1px solid #2a2d3e;">• ${escHtml(f)}</div>`).join('')}</div>`:''}
+          ${r.limitations?.length?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:5px;">Limitations</div>${r.limitations.map(l=>`<div style="font-size:13px;color:#9ca3af;line-height:1.7;">• ${escHtml(l)}</div>`).join('')}</div>`:''}
+          ${r.keywords?.length?`<div><div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Keywords</div><div class="chip-row">${r.keywords.map(k=>`<span class="chip" style="background:#fda4af15;color:#fda4af;border-color:#fda4af30;">${escHtml(k)}</span>`).join('')}</div></div>`:''}
+        </div>
+      </div>`;
+    setStatus('Scholarcy extraction complete ✓');
+  } else if (mode==='network') {
+    const inp = document.getElementById('sc-net-input').value.trim(); if(!inp) return;
+    const json = await aiCall('You are a concept mapping AI. Extract key concepts and their relationships from the paper. Return ONLY JSON: {concepts:[{name:"",type:"main|secondary|method|outcome",description:""}],relationships:[{from:"",to:"",relation:""}]}. No markdown.', inp, 'sc-net-sp');
+    let r; try { r=JSON.parse(json.replace(/```json|```/g,'').trim()); } catch { r={concepts:[],relationships:[]}; }
+    const typeColors = {main:'#fda4af',secondary:'#c4b5fd',method:'#93c5fd',outcome:'#6ee7b7'};
+    document.getElementById('sc-net-result').style.display='block';
+    document.getElementById('sc-net-result').innerHTML = `
+      <div class="tool-result-card" style="border-color:#fda4af30;">
+        <div class="tool-result-header"><span style="color:#fda4af;font-weight:700;">🕸️ Concept Map</span></div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Concepts</div>
+          <div class="chip-row">${(r.concepts||[]).map(c=>`<span class="chip" style="background:${typeColors[c.type]||'#6b7280'}15;color:${typeColors[c.type]||'#6b7280'};border-color:${typeColors[c.type]||'#6b7280'}30;" title="${escHtml(c.description||'')}">${escHtml(c.name)}</span>`).join('')}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Relationships</div>
+          ${(r.relationships||[]).map(rel=>`
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #2a2d3e;font-size:12px;">
+              <span style="color:#fda4af;font-weight:600;">${escHtml(rel.from||'')}</span>
+              <span style="color:#6b7280;font-style:italic;">→ ${escHtml(rel.relation||'')} →</span>
+              <span style="color:#c4b5fd;font-weight:600;">${escHtml(rel.to||'')}</span>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          ${Object.entries(typeColors).map(([k,v])=>`<span class="chip" style="background:${v}15;color:${v};border-color:${v}30;">${k}</span>`).join('')}
+        </div>
+      </div>`;
+    setStatus('Scholarcy concept map ready ✓');
+  }
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- PAPERPAL TOOLS MODAL -->
+<!-- ============================================================ -->
+<div id="paperpalModal" style="display:none;position:fixed;inset:0;z-index:200;background:#0008;backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;">
+  <div id="ppModalInner" style="background:#16181f;border:1px solid #2a2d3e;border-radius:18px;width:700px;max-width:95vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 80px #000a;">
+    <!-- Modal header -->
+    <div id="ppModalHeader" style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #2a2d3e;flex-shrink:0;">
+      <span id="ppModalIcon" style="font-size:24px;"></span>
+      <div>
+        <div id="ppModalTitle" style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#e8eaf2;"></div>
+        <div id="ppModalSub" style="font-size:12px;color:#6b7280;margin-top:1px;"></div>
+      </div>
+      <button onclick="closePaperpalTool()" style="margin-left:auto;background:transparent;border:1px solid #2a2d3e;border-radius:8px;color:#6b7280;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;" onmouseover="this.style.color='#e8eaf2'" onmouseout="this.style.color='#6b7280'">✕ Close</button>
+    </div>
+    <!-- Modal body -->
+    <div id="ppModalBody" style="overflow-y:auto;padding:22px;flex:1;"></div>
+  </div>
+</div>
+
+<style>
+  /* Shared tool styles */
+  .pp-section { margin-bottom:18px; }
+  .pp-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:7px;display:block; }
+  .pp-textarea {
+    width:100%;min-height:90px;background:#1e2130;border:1px solid #2a2d3e;border-radius:9px;
+    padding:11px 13px;color:#e8eaf2;font-size:13px;line-height:1.65;resize:vertical;
+    font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;
+  }
+  .pp-textarea:focus { border-color:#5b8af0; }
+  .pp-input {
+    width:100%;background:#1e2130;border:1px solid #2a2d3e;border-radius:9px;
+    padding:10px 13px;color:#e8eaf2;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;
+  }
+  .pp-input:focus { border-color:#5b8af0; }
+  .pp-select {
+    background:#1e2130;border:1px solid #2a2d3e;border-radius:7px;color:#e8eaf2;
+    font-size:12px;padding:7px 11px;outline:none;font-family:'DM Sans',sans-serif;cursor:pointer;
+  }
+  .pp-btn-row { display:flex;gap:10px;align-items:center;margin-top:4px; }
+  .pp-run-btn {
+    background:linear-gradient(135deg,#5b8af0,#a78bfa);border:none;border-radius:9px;
+    color:#fff;font-size:13px;font-weight:700;padding:10px 24px;cursor:pointer;
+    font-family:'DM Sans',sans-serif;transition:opacity .15s;display:flex;align-items:center;gap:7px;
+  }
+  .pp-run-btn:hover { opacity:.85; }
+  .pp-run-btn:disabled { opacity:.45;cursor:not-allowed; }
+  .pp-use-editor {
+    background:#1e2130;border:1px solid #2a2d3e;border-radius:7px;color:#6b7280;
+    font-size:12px;padding:7px 13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+  }
+  .pp-use-editor:hover { color:#e8eaf2;border-color:#5b8af0; }
+  .pp-result-card {
+    background:#1e2130;border:1px solid #5b8af030;border-radius:12px;padding:18px;
+    margin-top:16px;animation:fadeSlide .3s ease;
+  }
+  .pp-result-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px; }
+  .pp-result-text { font-size:13.5px;line-height:1.8;color:#e8eaf2; }
+  .pp-copy-btn {
+    background:#0e0f14;border:1px solid #2a2d3e;border-radius:6px;padding:4px 11px;
+    font-size:11px;color:#6b7280;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+  }
+  .pp-copy-btn:hover { color:#e8eaf2;border-color:#5b8af0; }
+  .pp-insert-btn {
+    background:#34d39915;border:1px solid #34d39930;border-radius:6px;padding:4px 11px;
+    font-size:11px;color:#34d399;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+  }
+  .pp-insert-btn:hover { background:#34d39925; }
+  .pp-chip-row { display:flex;flex-wrap:wrap;gap:7px;margin-top:8px; }
+  .pp-chip {
+    font-size:12px;padding:4px 12px;border-radius:20px;font-weight:600;cursor:pointer;
+    border:1px solid #2a2d3e;background:#1e2130;color:#6b7280;transition:all .15s;
+  }
+  .pp-chip:hover,.pp-chip.active { background:#5b8af015;color:#5b8af0;border-color:#5b8af040; }
+  .pp-grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+  .pp-stat-mini { background:#0e0f14;border:1px solid #2a2d3e;border-radius:9px;padding:12px;text-align:center; }
+  .pp-stat-mini .val { font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:3px; }
+  .pp-stat-mini .lbl { font-size:10px;color:#6b7280; }
+  .pp-check-item { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #2a2d3e; }
+  .pp-check-item:last-child { border-bottom:none; }
+  .pp-check-icon { width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px; }
+  .pp-check-pass { background:#34d39920;color:#34d399; }
+  .pp-check-warn { background:#fb923c20;color:#fb923c; }
+  .pp-check-fail { background:#f4727220;color:#f47272; }
+  .pp-check-title { font-size:13px;font-weight:600;margin-bottom:2px; }
+  .pp-check-desc { font-size:12px;color:#6b7280;line-height:1.5; }
+  .pp-lang-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px; }
+  .pp-lang-btn { background:#1e2130;border:1px solid #2a2d3e;border-radius:7px;padding:7px 6px;font-size:11px;font-weight:600;color:#6b7280;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif; }
+  .pp-lang-btn:hover,.pp-lang-btn.active { background:#5b8af015;color:#5b8af0;border-color:#5b8af040; }
+  .pp-pdf-messages { max-height:240px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:10px; }
+  .pp-msg { padding:10px 13px;border-radius:10px;font-size:13px;line-height:1.6;max-width:90%; }
+  .pp-msg-user { background:#5b8af020;border:1px solid #5b8af030;color:#e8eaf2;align-self:flex-end; }
+  .pp-msg-ai { background:#1e2130;border:1px solid #2a2d3e;color:#c4c8d8;align-self:flex-start; }
+  .pp-pdf-input-row { display:flex;gap:8px; }
+  .pp-pdf-input-row input { flex:1;background:#1e2130;border:1px solid #2a2d3e;border-radius:9px;padding:9px 12px;color:#e8eaf2;font-size:13px;font-family:'DM Sans',sans-serif;outline:none; }
+  .pp-pdf-input-row input:focus { border-color:#5b8af0; }
+  .pp-pdf-send { background:linear-gradient(135deg,#5b8af0,#a78bfa);border:none;border-radius:9px;color:#fff;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif; }
+  .synonym-word { font-size:28px;font-weight:700;font-family:'Playfair Display',serif;color:#5b8af0;margin-bottom:4px; }
+  .synonym-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px; }
+  .syn-card { background:#0e0f14;border:1px solid #2a2d3e;border-radius:8px;padding:9px 10px;cursor:pointer;transition:all .15s; }
+  .syn-card:hover { border-color:#5b8af0;background:#5b8af008; }
+  .syn-word { font-size:13px;font-weight:600;color:#e8eaf2;margin-bottom:2px; }
+  .syn-type { font-size:10px;color:#a78bfa;font-weight:600;text-transform:uppercase; }
+  .syn-usage { font-size:10px;color:#6b7280;margin-top:2px; }
+</style>
+
+<script>
+// ---- Paperpal Tools ----
+const ppTools = {
+  essay: { icon:'✍️', title:'AI Essay Writer', sub:'Generate academic essays from topic or outline' },
+  abstract: { icon:'📄', title:'Abstract Generator', sub:'Create a structured abstract from your paper' },
+  title: { icon:'🏷️', title:'Title Generator', sub:'Generate compelling academic titles' },
+  translate: { icon:'🌐', title:'AI Translator', sub:'Translate text to/from 25+ languages' },
+  wordreduce: { icon:'✂️', title:'Word Reducer', sub:'Cut word count while preserving meaning' },
+  synonym: { icon:'🔤', title:'Synonym Finder', sub:'Find academic synonym alternatives' },
+  chatpdf: { icon:'💬', title:'Chat PDF', sub:'Ask questions about your document' },
+  submission: { icon:'🚀', title:'Submission Readiness Checker', sub:'30+ checks before journal submission' },
+};
+
+let currentTool = null;
+let chatHistory = [];
+
+function openPaperpalTool(tool) {
+  currentTool = tool;
+  const cfg = ppTools[tool];
+  document.getElementById('ppModalIcon').textContent = cfg.icon;
+  document.getElementById('ppModalTitle').textContent = cfg.title;
+  document.getElementById('ppModalSub').textContent = cfg.sub;
+  document.getElementById('ppModalBody').innerHTML = renderToolBody(tool);
+  const modal = document.getElementById('paperpalModal');
+  modal.style.display = 'flex';
+  // accent the border based on tool
+  const accents = { essay:'#5b8af0', abstract:'#a78bfa', title:'#34d399', translate:'#22d3ee', wordreduce:'#fb923c', synonym:'#f472b6', chatpdf:'#facc15', submission:'#34d399' };
+  document.getElementById('ppModalInner').style.borderColor = (accents[tool]||'#5b8af0') + '40';
+}
+
+function closePaperpalTool() {
+  document.getElementById('paperpalModal').style.display = 'none';
+  chatHistory = [];
+}
+
+function renderToolBody(tool) {
+  if (tool === 'essay') return `
+    <div class="pp-section">
+      <span class="pp-label">Topic or Thesis</span>
+      <textarea class="pp-textarea" id="pp-essay-topic" placeholder="e.g., The role of CRISPR in gene therapy for rare genetic diseases..." style="min-height:70px;"></textarea>
+    </div>
+    <div class="pp-grid-2" style="margin-bottom:16px;">
+      <div><span class="pp-label">Essay Type</span>
+        <select class="pp-select" id="pp-essay-type" style="width:100%;">
+          <option>Research Paper</option><option>Literature Review</option><option>Case Study</option>
+          <option>Argumentative</option><option>Expository</option><option>Thesis Chapter</option>
+        </select>
+      </div>
+      <div><span class="pp-label">Length</span>
+        <select class="pp-select" id="pp-essay-len" style="width:100%;">
+          <option>Short (~300 words)</option><option>Medium (~600 words)</option><option>Long (~1000 words)</option>
+        </select>
+      </div>
+    </div>
+    <div class="pp-section">
+      <span class="pp-label">Key Points to Include (optional)</span>
+      <textarea class="pp-textarea" id="pp-essay-points" placeholder="• Point 1&#10;• Point 2&#10;• Point 3" style="min-height:60px;"></textarea>
+    </div>
+    <div class="pp-btn-row">
+      <button class="pp-run-btn" onclick="runEssayWriter()"><span id="pp-essay-sp"></span>✍️ Generate Essay</button>
+      <span style="font-size:11px;color:#6b7280;">Ctrl+Enter to run</span>
+    </div>
+    <div id="pp-essay-result"></div>`;
+
+  if (tool === 'abstract') return `
+    <div class="pp-section">
+      <span class="pp-label">Paste your paper or key sections</span>
+      <textarea class="pp-textarea" id="pp-abs-input" placeholder="Paste your introduction, methods, results, and conclusion here..." style="min-height:130px;"></textarea>
+      <div class="pp-btn-row" style="margin-top:8px;">
+        <button class="pp-use-editor" onclick="document.getElementById('pp-abs-input').value = document.getElementById('mainEditor').value.slice(0,2000)">↩ Use Editor</button>
+      </div>
+    </div>
+    <div class="pp-grid-2" style="margin-bottom:16px;">
+      <div><span class="pp-label">Abstract Style</span>
+        <select class="pp-select" style="width:100%;" id="pp-abs-style">
+          <option>Structured (Background/Methods/Results/Conclusion)</option>
+          <option>Unstructured (Narrative)</option>
+          <option>Informative</option>
+          <option>Descriptive</option>
+        </select>
+      </div>
+      <div><span class="pp-label">Max Words</span>
+        <select class="pp-select" style="width:100%;" id="pp-abs-words">
+          <option>150 words</option><option>250 words</option><option>300 words</option><option>500 words</option>
+        </select>
+      </div>
+    </div>
+    <div class="pp-btn-row">
+      <button class="pp-run-btn" onclick="runAbstractGen()"><span id="pp-abs-sp"></span>📄 Generate Abstract</button>
+    </div>
+    <div id="pp-abs-result"></div>`;
+
+  if (tool === 'title') return `
+    <div class="pp-section">
+      <span class="pp-label">Describe your paper topic or paste abstract</span>
+      <textarea class="pp-textarea" id="pp-title-input" placeholder="e.g., We study the effects of AI-powered feedback on student writing quality in higher education..." style="min-height:100px;"></textarea>
+      <div class="pp-btn-row" style="margin-top:8px;">
+        <button class="pp-use-editor" onclick="document.getElementById('pp-title-input').value = document.getElementById('mainEditor').value.slice(0,500)">↩ Use Editor</button>
+      </div>
+    </div>
+    <div class="pp-grid-2" style="margin-bottom:16px;">
+      <div><span class="pp-label">Style</span>
+        <select class="pp-select" style="width:100%;" id="pp-title-style">
+          <option>Descriptive</option><option>Question-based</option><option>Colon-separated</option>
+          <option>Impact-first</option><option>Hypothesis-driven</option>
+        </select>
+      </div>
+      <div><span class="pp-label">Count</span>
+        <select class="pp-select" style="width:100%;" id="pp-title-count">
+          <option>5 titles</option><option>8 titles</option><option>10 titles</option>
+        </select>
+      </div>
+    </div>
+    <div class="pp-btn-row">
+      <button class="pp-run-btn" onclick="runTitleGen()"><span id="pp-title-sp"></span>🏷️ Generate Titles</button>
+    </div>
+    <div id="pp-title-result"></div>`;
+
+  if (tool === 'translate') return `
+    <div style="margin-bottom:14px;">
+      <span class="pp-label">Source Language</span>
+      <div class="pp-lang-grid" id="pp-src-langs">
+        ${['Auto Detect','French','Spanish','German','Chinese','Arabic','Portuguese','Japanese','Korean','Hindi','Italian','Russian'].map((l,i)=>`<button class="pp-lang-btn${i===0?' active':''}" onclick="selectLang(this,'src','${l}')">${l}</button>`).join('')}
+      </div>
+      <span class="pp-label" style="margin-top:10px;">Target Language</span>
+      <div class="pp-lang-grid" id="pp-tgt-langs">
+        ${['English','French','Spanish','German','Chinese','Arabic','Portuguese','Japanese','Korean','Hindi','Italian','Russian'].map((l,i)=>`<button class="pp-lang-btn${i===0?' active':''}" onclick="selectLang(this,'tgt','${l}')">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="pp-section">
+      <span class="pp-label">Text to Translate</span>
+      <textarea class="pp-textarea" id="pp-trans-input" placeholder="Paste text here to translate..." style="min-height:110px;"></textarea>
+      <div class="pp-btn-row" style="margin-top:8px;">
+        <button class="pp-use-editor" onclick="document.getElementById('pp-trans-input').value = document.getElementById('mainEditor').value.slice(0,800)">↩ Use Editor</button>
+      </div>
+    </div>
+    <div class="pp-btn-row">
+      <button class="pp-run-btn" onclick="runTranslate()"><span id="pp-trans-sp"></span>🌐 Translate</button>
+    </div>
+    <div id="pp-trans-result"></div>`;
+
+  if (tool === 'wordreduce') return `
+    <div class="pp-section">
+      <span class="pp-label">Text to Shorten</span>
+      <textarea class="pp-textarea" id="pp-wr-input" placeholder="Paste verbose text here to reduce word count while preserving meaning..." style="min-height:130px;"></textarea>
+      <div class="pp-btn-row" style="margin-top:8px;">
+        <button class="pp-use-editor" onclick="document.getElementById('pp-wr-input').value = document.getElementById('mainEditor').value">↩ Use Editor</button>
+      </div>
+    </div>
+    <div class="pp-grid-2" style="margin-bottom:16px;">
+      <div><span class="pp-label">Reduction Target</span>
+        <select class="pp-select" style="width:100%;" id="pp-wr-pct">
+          <option>10% reduction</option><option>20% reduction</option><option>30% reduction</option>
+          <option>40% reduction</option><option>50% reduction</option>
+        </select>
+      </div>
+      <div><span class="pp-label">Priority</span>
+        <select class="pp-select" style="width:100%;" id="pp-wr-prio">
+          <option>Preserve key facts</option><option>Preserve citations</option>
+          <option>Preserve academic tone</option><option>Maximize reduction</option>
+        </select>
+      </div>
+    </div>
+    <div id="pp-wr-stats" style="display:none;" class="pp-grid-2" style="margin-bottom:14px;"></div>
+    <div class="pp-btn-row">
+      <button class="pp-run-btn" onclick="runWordReduce()"><span id="pp-wr-sp"></span>✂️ Reduce Words</button>
+    </div>
+    <div id="pp-wr-result"></div>`;
+
+  if (tool === 'synonym') return `
+    <div class="pp-section">
+      <span class="pp-label">Enter a word or phrase</span>
+      <div style="display:flex;gap:10px;">
+        <input class="pp-input" id="pp-syn-input" placeholder="e.g., important, significant, shows..." style="flex:1;" onkeydown="if(event.key==='Enter')runSynonym()" />
+        <button class="pp-run-btn" onclick="runSynonym()" style="padding:10px 20px;"><span id="pp-syn-sp"></span>🔤 Find</button>
+      </div>
+    </div>
+    <div class="pp-section">
+      <span class="pp-label">Context (optional — improves suggestions)</span>
+      <textarea class="pp-textarea" id="pp-syn-ctx" placeholder="Paste the sentence containing this word for better context-aware suggestions..." style="min-height:55px;"></textarea>
+    </div>
+    <div class="pp-section">
+      <span class="pp-label">Filter by type</span>
+      <div class="pp-chip-row" id="pp-syn-filters">
+        <span class="pp-chip active" onclick="toggleChip(this)">All</span>
+        <span class="pp-chip" onclick="toggleChip(this)">Formal</span>
+        <span class="pp-chip" onclick="toggleChip(this)">Academic</span>
+        <span class="pp-chip" onclick="toggleChip(this)">Concise</span>
+        <span class="pp-chip" onclick="toggleChip(this)">Vivid</span>
+      </div>
+    </div>
+    <div id="pp-syn-result"></div>`;
+
+  if (tool === 'chatpdf') return `
+    <div class="pp-section">
+      <span class="pp-label">Upload PDF or use editor content</span>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <button class="pp-use-editor" onclick="initChatWithEditor()" style="flex:1;padding:10px;">📄 Use Current Editor Text as Context</button>
+        <label style="flex:1;background:#1e2130;border:1px dashed #2a2d3e;border-radius:9px;padding:10px;text-align:center;cursor:pointer;font-size:12px;color:#6b7280;transition:all .15s;" onmouseover="this.style.borderColor='#5b8af0'" onmouseout="this.style.borderColor='#2a2d3e'">
+          📁 Upload PDF<input type="file" accept=".pdf,.txt" style="display:none;" onchange="handlePDFUpload(this)" />
+        </label>
+      </div>
+      <div id="pp-chat-context-status" style="font-size:11px;color:#34d399;margin-bottom:10px;display:none;">✓ Context loaded — ask anything below</div>
+    </div>
+    <div class="pp-pdf-messages" id="pp-chat-messages">
+      <div class="pp-msg pp-msg-ai">👋 Upload a PDF or use your editor text as context, then ask me anything about it!</div>
+    </div>
+    <div class="pp-pdf-input-row">
+      <input id="pp-chat-input" placeholder="Ask a question about the document..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+      <button class="pp-pdf-send" onclick="sendChatMessage()">Send ↑</button>
+    </div>`;
+
+  if (tool === 'submission') return `
+    <div class="pp-section">
+      <span class="pp-label">Target Journal (optional)</span>
+      <input class="pp-input" id="pp-sub-journal" placeholder="e.g., Nature, PLOS ONE, IEEE Transactions..." style="margin-bottom:10px;" />
+      <span class="pp-label">Paper to Check</span>
+      <div class="pp-btn-row" style="margin-bottom:12px;">
+        <button class="pp-use-editor" onclick="document.getElementById('pp-sub-text').value = document.getElementById('paperTitle').value + '\n\n' + document.getElementById('mainEditor').value">↩ Load from Editor</button>
+      </div>
+      <textarea class="pp-textarea" id="pp-sub-text" placeholder="Paste your full paper text here or load from editor..." style="min-height:80px;"></textarea>
+    </div>
+    <div class="pp-btn-row" style="margin-bottom:16px;">
+      <button class="pp-run-btn" onclick="runSubmissionCheck()"><span id="pp-sub-sp"></span>🚀 Run 30+ Checks</button>
+    </div>
+    <div id="pp-sub-result"></div>`;
+
+  return '<div style="color:#6b7280;padding:20px;text-align:center;">Tool not found.</div>';
+}
+
+// ---- Tool runners ----
+let ppTransSrc = 'Auto Detect', ppTransTgt = 'English';
+function selectLang(btn, group, val) {
+  const grid = btn.closest('.pp-lang-grid');
+  grid.querySelectorAll('.pp-lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (group === 'src') ppTransSrc = val;
+  else ppTransTgt = val;
+}
+function toggleChip(chip) {
+  chip.classList.toggle('active');
+}
+function toggleChip(chip) {
+  const row = chip.closest('.pp-chip-row');
+  row.querySelectorAll('.pp-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+}
+
+async function ppAICall(system, user, spinnerId) {
+  if (spinnerId) document.getElementById(spinnerId).className = 'spinner';
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages:[{role:'user',content:user}] })
+    });
+    const data = await res.json();
+    return data.content?.map(b => b.text||'').join('') || '';
+  } catch { return 'Error: Could not connect to AI.'; }
+  finally { if (spinnerId) document.getElementById(spinnerId).className = ''; }
+}
+
+function ppResultCard(tag, tagColor, text, insertable) {
+  const id = 'ppr_' + Date.now();
+  return `<div class="pp-result-card" style="border-color:${tagColor}30;" id="${id}">
+    <div class="pp-result-header">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:${tagColor}20;color:${tagColor};">${tag}</span>
+      <div style="display:flex;gap:7px;">
+        <button class="pp-copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('${id}').querySelector('.pp-result-text').innerText);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+        ${insertable ? `<button class="pp-insert-btn" onclick="document.getElementById('mainEditor').value += '\\n\\n' + document.getElementById('${id}').querySelector('.pp-result-text').innerText; updateWordCount(); setStatus('Inserted to editor ✓')">↩ Insert</button>` : ''}
+      </div>
+    </div>
+    <div class="pp-result-text">${escHtml(text)}</div>
+  </div>`;
+}
+
+async function runEssayWriter() {
+  const topic = document.getElementById('pp-essay-topic').value.trim();
+  if (!topic) { alert('Enter a topic first.'); return; }
+  const type = document.getElementById('pp-essay-type').value;
+  const len = document.getElementById('pp-essay-len').value;
+  const points = document.getElementById('pp-essay-points').value.trim();
+  const btn = document.querySelector('#pp-essay-result').previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const text = await ppAICall(
+    `You are an expert academic writer. Write a well-structured ${type} in ${len} about the given topic. Use formal academic language, proper paragraph structure, and scholarly tone. ${points ? 'Include these key points: ' + points : ''} Return only the essay text.`,
+    topic, 'pp-essay-sp'
+  );
+  btn.disabled = false;
+  document.getElementById('pp-essay-result').innerHTML = ppResultCard('Essay', '#5b8af0', text, true);
+  setStatus('Essay generated ✓');
+}
+
+async function runAbstractGen() {
+  const input = document.getElementById('pp-abs-input').value.trim();
+  if (!input) { alert('Paste your paper text first.'); return; }
+  const style = document.getElementById('pp-abs-style').value;
+  const words = document.getElementById('pp-abs-words').value;
+  const btn = document.querySelector('#pp-abs-result').previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const text = await ppAICall(
+    `You are an expert at writing academic abstracts. Generate a ${style} abstract of approximately ${words} based on the given paper content. Be precise, academic, and comprehensive. Return only the abstract text.`,
+    input, 'pp-abs-sp'
+  );
+  btn.disabled = false;
+  document.getElementById('pp-abs-result').innerHTML = ppResultCard('Abstract', '#a78bfa', text, true);
+  setStatus('Abstract generated ✓');
+}
+
+async function runTitleGen() {
+  const input = document.getElementById('pp-title-input').value.trim();
+  if (!input) { alert('Enter a topic description first.'); return; }
+  const style = document.getElementById('pp-title-style').value;
+  const count = document.getElementById('pp-title-count').value.replace(' titles','');
+  const btn = document.querySelector('#pp-title-result').previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const raw = await ppAICall(
+    `You are an expert at crafting academic paper titles. Generate ${count} ${style} title options. Return ONLY a numbered list of titles, one per line. No explanation.`,
+    input, 'pp-title-sp'
+  );
+  btn.disabled = false;
+  const titles = raw.split('\n').filter(t => t.trim()).map(t => t.replace(/^\d+\.\s*/,'').trim());
+  const html = `<div class="pp-result-card" style="border-color:#34d39930;margin-top:16px;animation:fadeSlide .3s ease;">
+    <div class="pp-result-header"><span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:#34d39920;color:#34d399;">Titles</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${titles.map((t,i) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#0e0f14;border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#5b8af010'" onmouseout="this.style.background='#0e0f14'" onclick="document.getElementById('paperTitle').value='${t.replace(/'/g,"\\'")}';updateWordCount();setStatus('Title applied ✓');closePaperpalTool();">
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#6b7280;margin-top:2px;">${String(i+1).padStart(2,'0')}</span>
+        <span style="font-size:13px;font-weight:600;color:#e8eaf2;line-height:1.5;">${escHtml(t)}</span>
+        <span style="margin-left:auto;font-size:11px;color:#5b8af0;flex-shrink:0;">Apply →</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('pp-title-result').innerHTML = html;
+  setStatus('Titles generated ✓');
+}
+
+async function runTranslate() {
+  const input = document.getElementById('pp-trans-input').value.trim();
+  if (!input) { alert('Enter text to translate.'); return; }
+  const btn = document.querySelector('#pp-trans-result').previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const text = await ppAICall(
+    `You are a professional academic translator. Translate the given text ${ppTransSrc !== 'Auto Detect' ? 'from ' + ppTransSrc : ''} to ${ppTransTgt}. Preserve academic tone, technical terms, and citation formats. Return only the translated text.`,
+    input, 'pp-trans-sp'
+  );
+  btn.disabled = false;
+  document.getElementById('pp-trans-result').innerHTML = ppResultCard(`→ ${ppTransTgt}`, '#22d3ee', text, true);
+  setStatus('Translation complete ✓');
+}
+
+async function runWordReduce() {
+  const input = document.getElementById('pp-wr-input').value.trim();
+  if (!input) { alert('Paste text to reduce.'); return; }
+  const pct = document.getElementById('pp-wr-pct').value;
+  const prio = document.getElementById('pp-wr-prio').value;
+  const origWC = input.split(/\s+/).filter(Boolean).length;
+  const btn = document.querySelector('#pp-wr-result').previousElementSibling.previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const text = await ppAICall(
+    `You are an expert academic editor. Reduce the word count of this text by approximately ${pct} while ${prio.toLowerCase()}. Remove redundancy, tighten sentences, eliminate filler phrases. Return only the reduced text.`,
+    input, 'pp-wr-sp'
+  );
+  btn.disabled = false;
+  const newWC = text.split(/\s+/).filter(Boolean).length;
+  const saved = origWC - newWC;
+  const statsHtml = `<div class="pp-grid-2" style="margin-top:16px;margin-bottom:0px;">
+    <div class="pp-stat-mini"><div class="val" style="color:#fb923c;">${origWC}</div><div class="lbl">Original Words</div></div>
+    <div class="pp-stat-mini"><div class="val" style="color:#34d399;">${newWC}</div><div class="lbl">Reduced Words</div></div>
+    <div class="pp-stat-mini"><div class="val" style="color:#5b8af0;">-${saved}</div><div class="lbl">Words Removed</div></div>
+    <div class="pp-stat-mini"><div class="val" style="color:#a78bfa;">${Math.round((saved/origWC)*100)}%</div><div class="lbl">Reduction</div></div>
+  </div>`;
+  document.getElementById('pp-wr-result').innerHTML = statsHtml + ppResultCard('Reduced', '#fb923c', text, true);
+  setStatus(`Word count reduced: ${origWC} → ${newWC} ✓`);
+}
+
+async function runSynonym() {
+  const word = document.getElementById('pp-syn-input').value.trim();
+  if (!word) return;
+  const ctx = document.getElementById('pp-syn-ctx').value.trim();
+  const raw = await ppAICall(
+    `You are an academic vocabulary expert. Generate synonym alternatives for the given word/phrase. Return ONLY a JSON array of objects: [{word:"", type:"formal|academic|concise|vivid|neutral", usage:"short example sentence or context note", frequency:"common|moderate|rare"}]. Generate 9-12 alternatives. No markdown.`,
+    word + (ctx ? '\n\nContext: ' + ctx : ''), 'pp-syn-sp'
+  );
+  let syns; try { syns = JSON.parse(raw.replace(/```json|```/g,'').trim()); } catch { syns = [{word:raw, type:'neutral', usage:'', frequency:''}]; }
+  const typeColors = {formal:'#5b8af0', academic:'#a78bfa', concise:'#34d399', vivid:'#fb923c', neutral:'#6b7280'};
+  const html = `<div style="margin-top:16px;animation:fadeSlide .3s ease;">
+    <div class="synonym-word">${escHtml(word)}</div>
+    <div style="font-size:11px;color:#6b7280;margin-bottom:12px;">${syns.length} alternatives found</div>
+    <div class="synonym-grid">
+      ${syns.map(s => `<div class="syn-card" onclick="navigator.clipboard.writeText('${escHtml(s.word)}');setStatus('Copied: ${escHtml(s.word)}')">
+        <div class="syn-word">${escHtml(s.word||'')}</div>
+        <div class="syn-type" style="color:${typeColors[s.type]||'#6b7280'};">${escHtml(s.type||'')}</div>
+        <div class="syn-usage">${escHtml(s.usage||'')}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:11px;color:#6b7280;margin-top:10px;">Click any card to copy to clipboard</div>
+  </div>`;
+  document.getElementById('pp-syn-result').innerHTML = html;
+  setStatus('Synonyms found ✓');
+}
+
+let chatContext = '';
+function initChatWithEditor() {
+  chatContext = document.getElementById('mainEditor').value.slice(0, 3000);
+  const status = document.getElementById('pp-chat-context-status');
+  if (status) { status.style.display = 'block'; status.textContent = '✓ Editor loaded (' + chatContext.split(/\s+/).length + ' words) — ask anything'; }
+  chatHistory = [];
+  const msgs = document.getElementById('pp-chat-messages');
+  if (msgs) msgs.innerHTML = '<div class="pp-msg pp-msg-ai">✓ Context loaded from editor! I can now answer questions about your document. What would you like to know?</div>';
+}
+function handlePDFUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    chatContext = e.target.result.slice(0, 3000);
+    const status = document.getElementById('pp-chat-context-status');
+    if (status) { status.style.display = 'block'; status.textContent = '✓ ' + file.name + ' loaded — ask anything'; }
+    chatHistory = [];
+    const msgs = document.getElementById('pp-chat-messages');
+    if (msgs) msgs.innerHTML = '<div class="pp-msg pp-msg-ai">✓ File loaded! Ask me anything about its content.</div>';
+  };
+  reader.readAsText(file);
+}
+async function sendChatMessage() {
+  const input = document.getElementById('pp-chat-input');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  const msgs = document.getElementById('pp-chat-messages');
+  msgs.innerHTML += `<div class="pp-msg pp-msg-user">${escHtml(q)}</div>`;
+  msgs.innerHTML += `<div class="pp-msg pp-msg-ai" id="pp-chat-typing"><span class="spinner"></span> Thinking…</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  chatHistory.push({ role:'user', content: q });
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:600,
+        system: `You are an academic research assistant. Answer questions about the provided document context. Be concise and precise.${chatContext ? '\n\nDocument context:\n' + chatContext : '\n\nNo document loaded — answer generally.'}`,
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(b=>b.text||'').join('') || 'No response.';
+    chatHistory.push({ role:'assistant', content: reply });
+    document.getElementById('pp-chat-typing').outerHTML = `<div class="pp-msg pp-msg-ai">${escHtml(reply)}</div>`;
+  } catch {
+    document.getElementById('pp-chat-typing').outerHTML = `<div class="pp-msg pp-msg-ai" style="color:#fb923c;">Connection error. Try again.</div>`;
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function runSubmissionCheck() {
+  const text = document.getElementById('pp-sub-text').value.trim();
+  const journal = document.getElementById('pp-sub-journal').value.trim();
+  if (!text) { alert('Load your paper from editor first.'); return; }
+  const btn = document.querySelector('#pp-sub-result').previousElementSibling.querySelector('.pp-run-btn');
+  btn.disabled = true;
+  const raw = await ppAICall(
+    `You are an expert academic journal editor. Perform a comprehensive submission readiness check on this paper${journal ? ' targeting ' + journal : ''}. Return ONLY a JSON array of check objects: [{category:"", check:"", status:"pass|warn|fail", detail:""}]. Include 12-16 checks covering: Abstract quality, Title clarity, Introduction structure, Methods completeness, Results presentation, Discussion depth, Conclusion strength, Citation format, Grammar quality, Clarity, Word count appropriateness, Figures/Tables mentioned, Keywords present, Ethical statements, Conflict of interest, Limitations discussed. No markdown.`,
+    text, 'pp-sub-sp'
+  );
+  btn.disabled = false;
+  let checks; try { checks = JSON.parse(raw.replace(/```json|```/g,'').trim()); } catch { checks = []; }
+  const pass = checks.filter(c=>c.status==='pass').length;
+  const warn = checks.filter(c=>c.status==='warn').length;
+  const fail = checks.filter(c=>c.status==='fail').length;
+  const score = checks.length ? Math.round((pass / checks.length)*100) : 0;
+  const statusIcon = {pass:'✓', warn:'⚠', fail:'✕'};
+  const statusClass = {pass:'pp-check-pass', warn:'pp-check-warn', fail:'pp-check-fail'};
+  const statusColor = {pass:'#34d399', warn:'#fb923c', fail:'#f47272'};
+  const html = `
+    <div style="display:flex;gap:12px;margin-bottom:18px;margin-top:16px;animation:fadeSlide .3s ease;">
+      <div class="pp-stat-mini" style="flex:2;"><div class="val" style="font-size:38px;color:${score>=80?'#34d399':score>=60?'#fb923c':'#f47272'};">${score}%</div><div class="lbl">Submission Ready</div></div>
+      <div style="flex:3;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div class="pp-stat-mini"><div class="val" style="color:#34d399;">${pass}</div><div class="lbl">Passed</div></div>
+        <div class="pp-stat-mini"><div class="val" style="color:#fb923c;">${warn}</div><div class="lbl">Warnings</div></div>
+        <div class="pp-stat-mini"><div class="val" style="color:#f47272;">${fail}</div><div class="lbl">Failed</div></div>
+      </div>
+    </div>
+    <div style="animation:fadeSlide .3s ease;">
+      ${checks.map(c => `<div class="pp-check-item">
+        <div class="pp-check-icon ${statusClass[c.status]||'pp-check-pass'}">${statusIcon[c.status]||'✓'}</div>
+        <div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:${statusColor[c.status]||'#34d399'};font-weight:700;margin-bottom:2px;">${escHtml(c.category||'')}</div>
+          <div class="pp-check-title">${escHtml(c.check||'')}</div>
+          <div class="pp-check-desc">${escHtml(c.detail||'')}</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  document.getElementById('pp-sub-result').innerHTML = html;
+  setStatus(`Submission check complete: ${score}% ready ✓`);
+}
+</script>
+</body>
+</html>

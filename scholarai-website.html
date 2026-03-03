@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ScholarAI — AI Research Writing Assistant</title>
+<meta name="description" content="ScholarAI is the most advanced AI-powered research writing assistant. Grammar check, paraphrasing, citation finder, plagiarism detection, humanizer, and more."/>
+<meta name="author" content="ScholarAI"/>
+<meta property="og:title" content="ScholarAI — AI Research Writing Assistant"/>
+<meta property="og:description" content="Write better research papers faster with AI."/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#08090f;
+  --paper:#f5f3ee;
+  --cream:#ede9e0;
+  --gold:#c9a84c;
+  --gold2:#e8c97a;
+  --blue:#1a2f6e;
+  --blue2:#2b4aae;
+  --muted:#7a7870;
+  --border:#d8d4c8;
+  --white:#ffffff;
+}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  overflow-x:hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:1000;opacity:.35;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  display:flex;align-items:center;gap:0;
+  padding:0 48px;height:64px;
+  background:rgba(245,243,238,.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow .3s;
+}
+nav.scrolled{box-shadow:0 2px 30px #0000000a;}
+.nav-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;font-weight:700;
+  color:var(--ink);letter-spacing:-.5px;
+  text-decoration:none;display:flex;align-items:center;gap:10px;
+}
+.nav-logo .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  flex-shrink:0;
+}
+.nav-links{
+  display:flex;gap:36px;margin-left:48px;
+}
+.nav-links a{
+  font-size:13px;font-weight:600;letter-spacing:.04em;
+  color:var(--muted);text-decoration:none;
+  text-transform:uppercase;transition:color .15s;
+}
+.nav-links a:hover{color:var(--ink);}
+.nav-right{margin-left:auto;display:flex;gap:12px;align-items:center;}
+.nav-badge{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 12px;border-radius:20px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--ink);
+}
+.nav-cta{
+  background:var(--ink);color:var(--paper);
+  border:none;padding:9px 22px;border-radius:6px;
+  font-size:13px;font-weight:700;cursor:pointer;
+  font-family:'Syne',sans-serif;
+  letter-spacing:.03em;transition:all .2s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+}
+.nav-cta:hover{background:var(--blue);transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  padding:120px 48px 80px;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, #c9a84c12 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 30%, #1a2f6e0a 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 60% 80%, #c9a84c08 0%, transparent 50%);
+}
+/* Decorative grid lines */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size:80px 80px;
+  opacity:.3;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
+}
+.hero-inner{
+  max-width:1100px;width:100%;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:center;
+  position:relative;z-index:2;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:24px;
+}
+.hero-eyebrow span{
+  width:32px;height:1px;background:var(--gold);
+}
+.hero-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:72px;line-height:.95;font-weight:700;
+  letter-spacing:-2px;margin-bottom:28px;
+  color:var(--ink);
+}
+.hero-title em{
+  font-style:italic;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-desc{
+  font-size:16px;line-height:1.75;color:var(--muted);
+  font-weight:400;margin-bottom:40px;max-width:480px;
+}
+.hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.btn-hero-primary{
+  background:var(--ink);color:var(--paper);
+  border:none;padding:14px 32px;border-radius:8px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Syne',sans-serif;letter-spacing:.03em;
+  transition:all .2s;display:inline-flex;align-items:center;gap:8px;
+  text-decoration:none;
+}
+.btn-hero-primary:hover{background:var(--blue);transform:translateY(-2px);box-shadow:0 12px 40px #1a2f6e30;}
+.btn-hero-secondary{
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--ink);padding:14px 28px;border-radius:8px;
+  font-size:14px;font-weight:600;cursor:pointer;
+  font-family:'Syne',sans-serif;letter-spacing:.03em;transition:all .2s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-hero-secondary:hover{border-color:var(--ink);background:var(--cream);}
+.hero-stats{
+  display:flex;gap:32px;margin-top:48px;padding-top:32px;
+  border-top:1px solid var(--border);
+}
+.hero-stat .val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:36px;font-weight:700;color:var(--ink);
+  letter-spacing:-1px;line-height:1;margin-bottom:4px;
+}
+.hero-stat .lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+
+/* Hero App Preview */
+.hero-visual{
+  position:relative;
+}
+.app-frame{
+  background:var(--ink);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 40px 80px #08090f30, 0 0 0 1px #ffffff10;
+  transform:perspective(1000px) rotateY(-8deg) rotateX(4deg);
+  transition:transform .4s ease;
+}
+.app-frame:hover{transform:perspective(1000px) rotateY(-4deg) rotateX(2deg);}
+.app-titlebar{
+  background:#16181f;
+  padding:10px 16px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid #2a2d3e;
+}
+.app-dot{width:10px;height:10px;border-radius:50%;}
+.app-screen{padding:0;background:#0e0f14;height:320px;overflow:hidden;position:relative;}
+.app-screen-inner{
+  display:grid;grid-template-columns:140px 1fr 200px;
+  height:100%;
+}
+.app-sidebar-mini{background:#16181f;border-right:1px solid #2a2d3e;padding:12px 8px;}
+.app-sidebar-mini .item{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 8px;border-radius:5px;
+  font-size:9px;font-family:'Syne',sans-serif;
+  color:#6b7280;margin-bottom:2px;cursor:default;
+}
+.app-sidebar-mini .item.active{background:#5b8af015;color:#5b8af0;}
+.app-sidebar-mini .section-label{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#3a3d52;padding:8px 8px 3px;font-weight:700;}
+.app-editor-mini{padding:16px;display:flex;flex-direction:column;gap:8px;}
+.app-editor-mini .title-line{height:12px;background:#2a2d3e;border-radius:3px;width:80%;}
+.app-editor-mini .text-line{height:7px;background:#1e2130;border-radius:2px;}
+.app-editor-mini .text-line.short{width:60%;}
+.app-editor-mini .text-line.med{width:75%;}
+.app-panel-mini{background:#16181f;border-left:1px solid #2a2d3e;padding:10px 8px;}
+.app-panel-mini .panel-chip{
+  padding:4px 8px;border-radius:4px;
+  font-size:8px;font-family:'Syne',sans-serif;
+  font-weight:700;margin-bottom:6px;
+  display:inline-block;
+}
+.floating-badge{
+  position:absolute;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 14px;
+  box-shadow:0 8px 30px #00000015;
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;
+  animation:float 3s ease-in-out infinite;
+}
+.floating-badge.b1{bottom:-16px;left:-24px;animation-delay:0s;}
+.floating-badge.b2{top:-16px;right:-24px;animation-delay:1.5s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── SECTION BASE ── */
+section{padding:100px 48px;}
+.section-inner{max-width:1100px;margin:0 auto;}
+.section-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.section-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold);}
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:52px;line-height:1.05;font-weight:700;
+  letter-spacing:-1.5px;margin-bottom:16px;
+}
+.section-sub{font-size:15px;line-height:1.7;color:var(--muted);max-width:540px;}
+
+/* ── FEATURES GRID ── */
+.features-section{background:var(--cream);}
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:2px;margin-top:60px;
+  border:2px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.feature-card{
+  background:var(--paper);
+  padding:36px 32px;
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  transition:background .2s;position:relative;overflow:hidden;
+}
+.feature-card:hover{background:var(--white);}
+.feature-card:hover .feature-icon-wrap{transform:scale(1.05);}
+.feature-icon-wrap{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:18px;
+  transition:transform .2s;
+}
+.feature-name{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--ink);}
+.feature-desc{font-size:13px;line-height:1.65;color:var(--muted);}
+.feature-tag{
+  display:inline-block;margin-top:14px;
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:3px 10px;border-radius:20px;text-transform:uppercase;
+}
+
+/* ── TOOLS SHOWCASE ── */
+.tools-section{background:var(--ink);color:var(--paper);}
+.tools-section .section-title{color:var(--paper);}
+.tools-section .section-sub{color:#9ca3af;}
+.tools-section .section-eyebrow{color:var(--gold);}
+.tools-section .section-eyebrow::before{background:var(--gold);}
+.tools-row{
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:48px;
+}
+.tool-pill{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 20px;
+  border:1px solid #2a2d3e;
+  border-radius:50px;
+  background:#16181f;
+  cursor:default;transition:all .2s;
+}
+.tool-pill:hover{border-color:#5b8af0;background:#5b8af010;transform:translateY(-2px);}
+.tool-pill .icon{font-size:18px;}
+.tool-pill .name{font-size:13px;font-weight:600;color:#e8eaf2;}
+.tool-pill .badge{
+  font-size:9px;font-weight:700;text-transform:uppercase;
+  padding:2px 7px;border-radius:10px;
+  background:var(--gold);color:var(--ink);
+}
+
+/* ── PRICING ── */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;margin-top:60px;
+}
+.price-card{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:16px;padding:36px 32px;
+  position:relative;transition:all .25s;
+}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px #00000010;}
+.price-card.featured{
+  border-color:var(--gold);
+  background:linear-gradient(160deg,#fffef9,#fff8e8);
+}
+.price-card.featured::before{
+  content:'MOST POPULAR';
+  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  background:var(--gold);color:var(--ink);
+  font-size:9px;font-weight:800;letter-spacing:.1em;
+  padding:4px 16px;border-radius:20px;
+}
+.price-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.price-amount{
+  font-family:'Cormorant Garamond',serif;
+  font-size:56px;font-weight:700;letter-spacing:-2px;
+  color:var(--ink);line-height:1;margin-bottom:4px;
+}
+.price-amount sup{font-size:24px;letter-spacing:0;vertical-align:super;}
+.price-period{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.price-divider{height:1px;background:var(--border);margin-bottom:24px;}
+.price-feature{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.4;
+}
+.price-feature .check{color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px;}
+.price-cta{
+  display:block;width:100%;margin-top:28px;
+  padding:12px;border-radius:8px;
+  font-size:13px;font-weight:700;
+  font-family:'Syne',sans-serif;letter-spacing:.03em;
+  cursor:pointer;border:none;transition:all .2s;text-align:center;
+  text-decoration:none;
+}
+.price-cta.primary{background:var(--ink);color:var(--paper);}
+.price-cta.primary:hover{background:var(--blue);}
+.price-cta.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);}
+.price-cta.gold:hover{opacity:.9;}
+.price-cta.outline{background:transparent;border:1.5px solid var(--border);color:var(--ink);}
+.price-cta.outline:hover{border-color:var(--ink);}
+
+/* ── TESTIMONIALS ── */
+.testimonials-section{background:var(--cream);}
+.testimonials-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;margin-top:60px;
+}
+.testi-card{
+  background:var(--paper);border:1px solid var(--border);
+  border-radius:14px;padding:28px;
+}
+.testi-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-size:17px;line-height:1.65;font-style:italic;
+  color:var(--ink);margin-bottom:20px;
+}
+.testi-author{display:flex;align-items:center;gap:12px;}
+.testi-avatar{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;flex-shrink:0;
+}
+.testi-name{font-size:13px;font-weight:700;}
+.testi-role{font-size:11px;color:var(--muted);}
+.stars{color:var(--gold);font-size:12px;margin-bottom:14px;letter-spacing:2px;}
+
+/* ── DOWNLOAD / CTA ── */
+.download-section{
+  background:var(--ink);
+  text-align:center;padding:120px 48px;
+  position:relative;overflow:hidden;
+}
+.download-section::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 60% at 50% 0%, #c9a84c18 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 100%, #2b4aae18 0%, transparent 50%);
+}
+.download-inner{position:relative;z-index:2;}
+.download-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:64px;line-height:1;font-weight:700;
+  letter-spacing:-2px;color:var(--paper);margin-bottom:20px;
+}
+.download-sub{font-size:16px;color:#9ca3af;margin-bottom:48px;max-width:480px;margin-left:auto;margin-right:auto;}
+.download-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.btn-download{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 32px;border-radius:10px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Syne',sans-serif;letter-spacing:.03em;
+  transition:all .2s;text-decoration:none;border:none;
+}
+.btn-download.primary{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--ink);
+}
+.btn-download.primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px #c9a84c40;}
+.btn-download.outline{
+  background:transparent;
+  border:1.5px solid #2a2d3e;color:var(--paper);
+}
+.btn-download.outline:hover{border-color:var(--paper);}
+.download-note{font-size:12px;color:#4b5563;margin-top:20px;}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--ink);
+  border-top:1px solid #1e2130;
+  padding:64px 48px 32px;
+}
+.footer-inner{max-width:1100px;margin:0 auto;}
+.footer-top{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:48px;margin-bottom:48px;
+}
+.footer-brand .logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:700;color:var(--paper);
+  letter-spacing:-.5px;margin-bottom:12px;display:block;
+}
+.footer-brand p{font-size:13px;line-height:1.65;color:#6b7280;max-width:280px;}
+.footer-col h4{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:#4b5563;margin-bottom:16px;
+}
+.footer-col a{
+  display:block;font-size:13px;color:#9ca3af;
+  text-decoration:none;margin-bottom:8px;transition:color .15s;
+}
+.footer-col a:hover{color:var(--paper);}
+.footer-divider{height:1px;background:#1e2130;margin-bottom:28px;}
+.footer-bottom{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:16px;
+}
+.copyright{font-size:12px;color:#4b5563;line-height:1.6;}
+.copyright strong{color:#9ca3af;}
+.footer-legal{display:flex;gap:24px;}
+.footer-legal a{
+  font-size:12px;color:#4b5563;text-decoration:none;transition:color .15s;
+}
+.footer-legal a:hover{color:var(--paper);}
+.footer-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:#4b5563;margin-top:8px;
+}
+.footer-badge .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--gold);animation:pulse2 2s ease-in-out infinite;
+}
+@keyframes pulse2{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── ANIMATIONS ── */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:40px;}
+  .app-frame{transform:none;}
+  .features-grid{grid-template-columns:1fr 1fr;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .testimonials-grid{grid-template-columns:1fr;}
+  .footer-top{grid-template-columns:1fr 1fr;}
+  nav{padding:0 24px;}
+  .hero{padding:100px 24px 60px;}
+  section{padding:70px 24px;}
+  .hero-title{font-size:52px;}
+  .section-title{font-size:38px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo"><div class="dot"></div>ScholarAI</a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#tools">Tools</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#download">Download</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">✦ AI Powered</span>
+    <a href="#download" class="nav-cta">Get ScholarAI →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="fade-up">
+      <div class="hero-eyebrow"><span></span>The Research Writing Revolution</div>
+      <h1 class="hero-title">Write Research<br/>That <em>Matters.</em></h1>
+      <p class="hero-desc">ScholarAI combines AI writing, grammar checking, citation management, plagiarism detection, humanization, and 8+ research tools — all in one beautifully designed workspace.</p>
+      <div class="hero-actions">
+        <a href="scholarai.html" class="btn-hero-primary">🚀 Open App Free</a>
+        <a href="#features" class="btn-hero-secondary">See all features ↓</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="val">12+</div><div class="lbl">AI Tools</div></div>
+        <div class="hero-stat"><div class="val">30+</div><div class="lbl">Submission Checks</div></div>
+        <div class="hero-stat"><div class="val">25+</div><div class="lbl">Languages</div></div>
+      </div>
+    </div>
+    <div class="hero-visual fade-up" style="animation-delay:.2s;">
+      <div class="app-frame">
+        <div class="app-titlebar">
+          <div class="app-dot" style="background:#ff5f57;"></div>
+          <div class="app-dot" style="background:#febc2e;"></div>
+          <div class="app-dot" style="background:#28c840;"></div>
+          <span style="font-size:10px;color:#6b7280;margin-left:12px;font-family:'Syne',sans-serif;">ScholarAI — Research Writing Assistant</span>
+        </div>
+        <div class="app-screen">
+          <div class="app-screen-inner">
+            <div class="app-sidebar-mini">
+              <div class="section-label">Documents</div>
+              <div class="item active">📄 Draft</div>
+              <div class="item">📑 Intro</div>
+              <div class="item">📋 Methods</div>
+              <div class="section-label">AI Tools</div>
+              <div class="item">🤖 Assistant</div>
+              <div class="item">✅ Grammar</div>
+              <div class="item">🔗 Refs</div>
+              <div class="item">🛡️ Plagiarism</div>
+              <div class="item">🧬 Humanize</div>
+              <div class="section-label">Tools</div>
+              <div class="item">✍️ Essay</div>
+              <div class="item">📄 Abstract</div>
+              <div class="item">🌐 Translate</div>
+            </div>
+            <div class="app-editor-mini">
+              <div class="title-line"></div>
+              <div style="height:6px;"></div>
+              <div class="text-line"></div>
+              <div class="text-line med"></div>
+              <div class="text-line short"></div>
+              <div class="text-line"></div>
+              <div class="text-line med"></div>
+              <div style="height:12px;"></div>
+              <div class="text-line"></div>
+              <div class="text-line short"></div>
+              <div class="text-line"></div>
+              <div class="text-line med"></div>
+              <div style="height:12px;"></div>
+              <div class="text-line"></div>
+              <div class="text-line"></div>
+              <div class="text-line short"></div>
+            </div>
+            <div class="app-panel-mini">
+              <div style="font-size:8px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">AI Panel</div>
+              <span class="panel-chip" style="background:#5b8af020;color:#5b8af0;">🤖 AI</span>
+              <div style="height:36px;background:#1e2130;border-radius:6px;margin-bottom:8px;"></div>
+              <div style="height:22px;background:linear-gradient(135deg,#5b8af0,#a78bfa);border-radius:5px;margin-bottom:8px;"></div>
+              <div style="height:60px;background:#1e2130;border-radius:6px;margin-bottom:6px;border:1px solid #5b8af030;"></div>
+              <div style="height:22px;background:#1e2130;border-radius:5px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-badge b1">
+        <span style="width:8px;height:8px;border-radius:50%;background:#34d399;"></span>
+        <span style="font-size:11px;font-weight:700;color:#1a1a2e;">94% Originality Score</span>
+      </div>
+      <div class="floating-badge b2">
+        <span>✦</span>
+        <span style="font-size:11px;font-weight:700;color:#1a1a2e;">AI Analysis Ready</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-inner">
+    <div class="fade-up">
+      <div class="section-eyebrow">Everything You Need</div>
+      <h2 class="section-title">Built for serious<br/>researchers.</h2>
+      <p class="section-sub">Every feature designed with academic rigor in mind — from first draft to journal submission.</p>
+    </div>
+    <div class="features-grid fade-up">
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#5b8af015;">🤖</div>
+        <div class="feature-name">AI Writing Assistant</div>
+        <div class="feature-desc">Generate sections, improve clarity, expand arguments, or summarize content with Claude AI powering every suggestion.</div>
+        <span class="feature-tag" style="background:#5b8af015;color:#5b8af0;">Core</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#34d39915;">✅</div>
+        <div class="feature-name">Grammar & Style Check</div>
+        <div class="feature-desc">Detect grammar, punctuation, style, and clarity issues with one-click fixes. Scored writing quality dashboard.</div>
+        <span class="feature-tag" style="background:#34d39915;color:#34d399;">Quality</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#a78bfa15;">🔄</div>
+        <div class="feature-name">AI Paraphrasing</div>
+        <div class="feature-desc">Rewrite any passage with academic tone, conversational style, or professional register — 4 intensity levels.</div>
+        <span class="feature-tag" style="background:#a78bfa15;color:#a78bfa;">Writing</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#fb923c15;">🔗</div>
+        <div class="feature-name">Citation & References</div>
+        <div class="feature-desc">Search academic references by topic, auto-generate APA/MLA citations, and insert them directly into your paper.</div>
+        <span class="feature-tag" style="background:#fb923c15;color:#fb923c;">Research</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#22d3ee15;">🛡️</div>
+        <div class="feature-name">Plagiarism Detection</div>
+        <div class="feature-desc">Check originality with a detailed score, source matching, and breakdown of original vs. matched content.</div>
+        <span class="feature-tag" style="background:#22d3ee15;color:#22d3ee;">Integrity</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#f472b615;">🧬</div>
+        <div class="feature-name">AI Humanizer</div>
+        <div class="feature-desc">Transform AI-generated text into natural human writing. Reduces AI detection risk with naturalness scoring.</div>
+        <span class="feature-tag" style="background:#f472b615;color:#f472b6;">Unique</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#facc1515;">📊</div>
+        <div class="feature-name">Document Analytics</div>
+        <div class="feature-desc">Radar charts, sentence flow graphs, keyword frequency, section breakdowns, and AI deep analysis reports.</div>
+        <span class="feature-tag" style="background:#facc1515;color:#ca8a04;">Insights</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#6ee7b715;">🚀</div>
+        <div class="feature-name">Submission Readiness</div>
+        <div class="feature-desc">30+ automated checks covering abstract quality, methodology, citations, ethics statements, and journal requirements.</div>
+        <span class="feature-tag" style="background:#6ee7b715;color:#059669;">Publication</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#c084fc15;">💬</div>
+        <div class="feature-name">Chat PDF</div>
+        <div class="feature-desc">Upload any PDF or load your document and have an intelligent conversation about its content — ask anything.</div>
+        <span class="feature-tag" style="background:#c084fc15;color:#9333ea;">Interactive</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="tools-section" id="tools">
+  <div class="section-inner">
+    <div class="fade-up">
+      <div class="section-eyebrow">Full Tool Suite</div>
+      <h2 class="section-title" style="color:var(--paper);">Every tool a researcher<br/>could ever need.</h2>
+      <p class="section-sub">Inspired by the best academic writing platforms. All in one place.</p>
+    </div>
+    <div class="tools-row fade-up">
+      <div class="tool-pill"><span class="icon">✍️</span><span class="name">Essay Writer</span><span class="badge">New</span></div>
+      <div class="tool-pill"><span class="icon">📄</span><span class="name">Abstract Generator</span></div>
+      <div class="tool-pill"><span class="icon">🏷️</span><span class="name">Title Generator</span></div>
+      <div class="tool-pill"><span class="icon">🌐</span><span class="name">AI Translator</span><span class="badge">25 langs</span></div>
+      <div class="tool-pill"><span class="icon">✂️</span><span class="name">Word Reducer</span></div>
+      <div class="tool-pill"><span class="icon">🔤</span><span class="name">Synonym Finder</span></div>
+      <div class="tool-pill"><span class="icon">💬</span><span class="name">Chat PDF</span></div>
+      <div class="tool-pill"><span class="icon">🚀</span><span class="name">Submission Check</span><span class="badge">30+ checks</span></div>
+      <div class="tool-pill"><span class="icon">🧬</span><span class="name">AI Humanizer</span><span class="badge">Unique</span></div>
+      <div class="tool-pill"><span class="icon">📊</span><span class="name">Analytics Dashboard</span></div>
+      <div class="tool-pill"><span class="icon">🔗</span><span class="name">Reference Manager</span></div>
+      <div class="tool-pill"><span class="icon">✅</span><span class="name">Grammar Engine</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="fade-up" style="text-align:center;">
+      <div class="section-eyebrow" style="justify-content:center;">Simple Pricing</div>
+      <h2 class="section-title">Free to start.<br/>Powerful to grow.</h2>
+    </div>
+    <div class="pricing-grid fade-up">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount"><sup>$</sup>0</div>
+        <div class="price-period">Free forever</div>
+        <div class="price-divider"></div>
+        <div class="price-feature"><span class="check">✦</span> Full editor & grammar check</div>
+        <div class="price-feature"><span class="check">✦</span> 10 AI generations/day</div>
+        <div class="price-feature"><span class="check">✦</span> Basic reference search</div>
+        <div class="price-feature"><span class="check">✦</span> Plagiarism score</div>
+        <div class="price-feature"><span class="check">✦</span> Analytics dashboard</div>
+        <a href="scholarai.html" class="price-cta outline">Get Started Free</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-name">Scholar</div>
+        <div class="price-amount"><sup>$</sup>12</div>
+        <div class="price-period">per month, billed annually</div>
+        <div class="price-divider"></div>
+        <div class="price-feature"><span class="check">✦</span> Everything in Starter</div>
+        <div class="price-feature"><span class="check">✦</span> Unlimited AI generations</div>
+        <div class="price-feature"><span class="check">✦</span> All 8 Paperpal tools</div>
+        <div class="price-feature"><span class="check">✦</span> AI Humanizer (deep mode)</div>
+        <div class="price-feature"><span class="check">✦</span> Submission readiness checks</div>
+        <div class="price-feature"><span class="check">✦</span> Chat PDF</div>
+        <a href="scholarai.html" class="price-cta gold">Start Scholar Plan</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Institution</div>
+        <div class="price-amount"><sup>$</sup>29</div>
+        <div class="price-period">per seat/month, min 5 seats</div>
+        <div class="price-divider"></div>
+        <div class="price-feature"><span class="check">✦</span> Everything in Scholar</div>
+        <div class="price-feature"><span class="check">✦</span> Team collaboration</div>
+        <div class="price-feature"><span class="check">✦</span> Custom journal templates</div>
+        <div class="price-feature"><span class="check">✦</span> Priority AI processing</div>
+        <div class="price-feature"><span class="check">✦</span> Admin dashboard</div>
+        <div class="price-feature"><span class="check">✦</span> Dedicated support</div>
+        <a href="#" class="price-cta primary">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <div class="section-inner">
+    <div class="fade-up" style="text-align:center;">
+      <div class="section-eyebrow" style="justify-content:center;">Trusted by Researchers</div>
+      <h2 class="section-title">What scholars say.</h2>
+    </div>
+    <div class="testimonials-grid fade-up">
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <div class="testi-quote">"ScholarAI cut my manuscript revision time in half. The grammar engine catches things I'd never notice, and the submission checker gave me confidence before submitting to Nature."</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#5b8af020;color:#5b8af0;">DR</div>
+          <div><div class="testi-name">Dr. Rania Aziz</div><div class="testi-role">Molecular Biology · University of Cairo</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <div class="testi-quote">"The AI Humanizer is genuinely remarkable. I use it to polish AI-assisted drafts so they read like my authentic voice. My advisor can't tell the difference."</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#34d39920;color:#34d399;">MK</div>
+          <div><div class="testi-name">Marcus Kim</div><div class="testi-role">PhD Candidate, Computer Science · MIT</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <div class="testi-quote">"The reference search and citation insertion alone save me two hours per paper. The analytics dashboard showed me I was overusing passive voice — instantly actionable."</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#f472b620;color:#f472b6;">SP</div>
+          <div><div class="testi-name">Sofia Petrov</div><div class="testi-role">Research Fellow · Oxford University</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section class="download-section" id="download">
+  <div class="download-inner">
+    <div class="fade-up">
+      <div class="section-eyebrow" style="justify-content:center;color:var(--gold);">Available Now</div>
+      <h2 class="download-title">Start writing<br/><em style="color:var(--gold2);">better today.</em></h2>
+      <p class="download-sub">Open instantly in your browser, or download as a desktop app for Windows, Mac, or Linux.</p>
+      <div class="download-buttons">
+        <a href="scholarai.html" class="btn-download primary">🚀 Open in Browser — Free</a>
+        <a href="#" class="btn-download outline" onclick="alert('Download the scholarai.html file and follow the Electron setup guide to build the .exe installer.')">🖥️ Desktop App (.exe)</a>
+      </div>
+      <div class="download-note">No account required to start · Works offline after loading · AI features require internet</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="logo">ScholarAI</span>
+        <p>The AI-powered research writing assistant built for academics, PhD students, and researchers worldwide. Write, edit, cite, and publish with confidence.</p>
+        <div class="footer-badge"><div class="dot"></div> Powered by Claude AI · Anthropic</div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#tools">Tools</a>
+        <a href="#pricing">Pricing</a>
+        <a href="scholarai.html">Launch App</a>
+        <a href="#">Desktop App</a>
+        <a href="#">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+        <a href="#">Research Blog</a>
+        <a href="#">Tutorials</a>
+        <a href="#">Support</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-bottom">
+      <div class="copyright">
+        <strong>© 2025 ScholarAI™. All rights reserved.</strong><br/>
+        ScholarAI and the ScholarAI logo are trademarks of ScholarAI. Unauthorized reproduction or distribution of this software, in whole or in part, is strictly prohibited. All content, features, and AI models are protected under applicable intellectual property laws. Powered by <strong>Anthropic Claude AI</strong>.
+      </div>
+      <div class="footer-legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+        <a href="#">Licenses</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll effect
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Fade-up on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+</script>
+</body>
+</html>
